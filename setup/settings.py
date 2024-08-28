@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-0ndby!w&-ru+m^_q280qam$@lobqoy97^q@3^p56^0ey*j+@ex
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [django-server.railway.internal]
-
+ALLOWED_HOSTS = ["django-server.railway.internal"]
 
 # Application definition
 
@@ -38,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework'
+    'rest_framework',
+    'supabase',
 ]
 
 MIDDLEWARE = [
@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'postgres.railway.internal',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
