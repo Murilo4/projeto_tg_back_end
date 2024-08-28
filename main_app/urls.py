@@ -16,8 +16,10 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import UserView
+from .views import get_user, get_by_nick, user_manager
 
 urlpatterns = [
-    path('home', UserView.as_view()),
+    path('', get_user),
+    path('user/<int:id>', get_by_nick),
+    path('edit/', user_manager)
 ]
