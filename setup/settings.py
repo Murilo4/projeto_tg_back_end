@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0ndby!w&-ru+m^_q280qam$@lobqoy97^q@3^p56^0ey*j+@ex'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["django-server.railway.internal"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -83,7 +83,11 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'postgres.railway.internal',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': 'postgres',
+        'USER': "postgres.bckzhvvseqoxehnryduz",
+        'PASSWORD': "Euestouficandolouco",
+        'HOST': "aws-0-sa-east-1.pooler.supabase.com",
+        'PORT': "6543",
     }
 }
 
