@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'postgres.railway.internal',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': "postgres.bckzhvvseqoxehnryduz",
         'PASSWORD': "Euestouficandolouco",
