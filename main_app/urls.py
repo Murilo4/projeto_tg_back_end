@@ -16,10 +16,12 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import get_user, get_by_nick, user_manager
+from .views import get_user, user_manager, create_user, login_view
 
 urlpatterns = [
     path('', get_user),
-    path('user/<int:id>', get_by_nick),
-    path('edit/', user_manager)
+    path('create/', create_user, name='create_user'),
+    path('login/', login_view, name='login'),
+    path('user/<int:id>', user_manager, name='get_user'),
+    path('update/', user_manager, name='update_user')
 ]
