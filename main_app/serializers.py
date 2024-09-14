@@ -8,25 +8,42 @@ from django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'password_hash', 'user_name', 'nick_name', 'phone_number', 'created_at', 'updated_at')
+        fields = ('id', 'email', 'user_name', 'nick_name', 'phone_number', 'created_at', 'updated_at')
 
-    def create(self, validated_data):
-        validated_data['password_hash'] = make_password(validated_data['password_hash'])
-        return super(UserSerializer, self).create(validated_data)
-    
     def validate_user_name(self, value):
-        if User.objects.filter(user_name=value).exists():
-            raise serializers.ValidationError("This username is not available. Try a suggested username or enter a new one.")
-        return value
+        errors = {}
 
-    def validate_password_hash(self, value):
-        if value != self.initial_data.get('confirm_password'):
-            raise serializers.ValidationError("Passwords must match.")
+        if User.objects.filter(user_name=value).exists():
+            errors["username_exists"] = "USERNAME_EXISTS"
+        # Verificar o tamanho do nome de usuário
+        if len(value) < 2:
+            errors["username_too_short"] = "USERNAME_TOO_SHORT"
+
+        if len(value) > 50:
+            errors["username_too_big"] = "USERNAME_TOO_BIG"
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return value
+    
+    def validate_email(self, value):
+        errors = {}
+        user_email = User.objects.filter(email=value)
+
+        if User.objects.filter(email=value).exists():
+            errors["email_exists"] = "EMAIL_EXISTS"
+
+        if not user_email.contains("@") or not user_email.contains(".com"):
+            errors["email_invalid"] = "EMAIL_NOT_VALID"
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        
         return value
     
     def create(self, validated_data):
         # Hash a senha antes de salvar
-        validated_data['password_hash'] = make_password(validated_data['password_hash'])
         
         # Cria e retorna o usuário
         user = User(**validated_data)  # Cria um novo objeto User
@@ -43,7 +60,6 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password_hash')
         
 
-        print(password)
         try:
             user = User.objects.get(user_name=username)
         

@@ -83,12 +83,18 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': "postgres.bsiqavzxatpdgokytdmb",
-        'PASSWORD': "Eunaoseiasenha",
-        'HOST': "aws-0-sa-east-1.pooler.supabase.com",
-        'PORT': "6543",
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'flashvibe',
+        'USER': "avnadmin",
+        'PASSWORD': "AVNS_0Khaos0wypvibRolbho",
+        'HOST': "mysql-flashvibe-flashvibe.k.aivencloud.com",
+        'PORT': "14319",
+        'OPTIONS': {
+            'ssl': {
+                'ca': './ca.pem',
+                
+            },
+        },
     }
 }
 
@@ -98,6 +104,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = EMAIL_ADDRESS
 EMAIL_HOST_PASSWORD = EMAIL_PASSWORD
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Password validation

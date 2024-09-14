@@ -12,6 +12,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.core.cache import cache
+from django.views import View
 
 def generate_confirmation_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -86,26 +87,58 @@ def create_user(request):
                 serializer.is_valid(raise_exception=True)
                 if serializer.is_valid():
                     user = serializer.save()
-
-                    confirmation_code = generate_confirmation_code()
-                    cache.set(f'confirmation_code_{user.email}', confirmation_code, timeout=300)
-                # Salvar o código de confirmação no usuário
-                    user.confirmation_code = confirmation_code
-                    user.save()
-                    
-                    # Enviar e-mail de confirmação
-                    send_mail(
-                        'Confirmação de Cadastro',
-                        f'Seu código de confirmação é: {confirmation_code}',
-                        'seuemail@dominio.com',
-                        [user.email],
-                        fail_silently=False,
-                    )
                     return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
             except ValidationError as e:
                 print(f'{e.detail}')
                 return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
 
+def confirmation_code(request):
+    if request.method == 'POST':
+        email = request.data.get('email')
+        try:
+            print("Enviado o email")
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+
+        confirmation_code = generate_confirmation_code()
+        cache.set(f'confirmation_code_{email}', confirmation_code, timeout=300)  # Armazenar no cache por 5 minutos
+
+        # Salvar o código de confirmação no usuário (opcional)
+        user.confirmation_code = confirmation_code
+        user.save()
+
+        # Enviar e-mail de confirmação
+        try:
+            send_mail(
+                'Confirmação de Cadastro',
+                f'Seu código de confirmação é: {confirmation_code}',
+                'seuemail@dominio.com',
+                [user.email],
+                fail_silently=False,
+            )
+            return JsonResponse({"message": "Confirmation code sent."}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+class VerifyConfirmationCodeView(View):
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('confirmation_code')
+
+        # Verificar o código no cache
+        cached_code = cache.get(f'confirmation_code_{email}')
+
+        if cached_code and cached_code == code:
+            # Código correto, marque o e-mail como verificado
+            user = User.objects.get(email=email)
+            user.is_email_verified = True  # Se você tiver esse campo no seu modelo
+            user.save()
+            return JsonResponse({"message": "Email verified successfully."}, status=200)
+        else:
+            return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
 
 @api_view(['POST'])
 def login_view(request):
