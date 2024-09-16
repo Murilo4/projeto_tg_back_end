@@ -1,4 +1,6 @@
 ca.pem
 .gitignore
-
+.env
+env
+__pycache__
 

@@ -9,10 +9,15 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.core.cache import cache
 from django.views import View
+from mailersend import emails
+from dotenv import load_dotenv
+import os
+
+from django.views.decorators.csrf import csrf_exempt
+load_dotenv()
+
 
 def generate_confirmation_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -91,37 +96,53 @@ def create_user(request):
             except ValidationError as e:
                 print(f'{e.detail}')
                 return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+@csrf_exempt
+@api_view(['POST'])
 def confirmation_code(request):
-    if request.method == 'POST':
-        email = request.data.get('email')
-        try:
-            print("Enviado o email")
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
+    confirmation_code = generate_confirmation_code()
+    to_email = request.data.get('to_email')
+    user_name = request.data.get('user_name', 'Recipient')
+    
+    # Predefinido o corpo do email
+    subject = "Bem-vindo ao flashVibe!"
+    html_content = f"""
+        <h1>Olá, {user_name}!</h1>
+        <p>Bem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco.</p>
+        <p>O código de segurança de 6 digitos para confirmação:</p>
+        <p>{confirmation_code}</p>
+        <p>Se você tiver alguma dúvida, sinta-se à vontade para entrar em contato conosco.</p>
+        <p>Atenciosamente,<br>FlashVibe</p>
+    """
+    plaintext_content = f"Olá, {user_name}!\nBem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco."
 
-        confirmation_code = generate_confirmation_code()
-        cache.set(f'confirmation_code_{email}', confirmation_code, timeout=300)  # Armazenar no cache por 5 minutos
+   
 
-        # Salvar o código de confirmação no usuário (opcional)
-        user.confirmation_code = confirmation_code
-        user.save()
+    mail_body = {}
 
-        # Enviar e-mail de confirmação
-        try:
-            send_mail(
-                'Confirmação de Cadastro',
-                f'Seu código de confirmação é: {confirmation_code}',
-                'seuemail@dominio.com',
-                [user.email],
-                fail_silently=False,
-            )
-            return JsonResponse({"message": "Confirmation code sent."}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+    mail_from = {
+        "name": "Flash Vibe",
+        "email": "MS_U7xQX5@trial-3yxj6lj7ex5ldo2r.mlsender.net",
+    }
 
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+    recipients = [
+        {
+            "name": user_name,
+            "email": to_email,
+        }
+    ]
+    mailer = emails.NewEmail(os.getenv('MAILERSEND_API_KEY'))
+    # Configurando os parâmetros do email
+    mailer.set_mail_from(mail_from, mail_body)
+    mailer.set_mail_to(recipients, mail_body)
+    mailer.set_subject(subject, mail_body)
+    mailer.set_html_content(html_content, mail_body)
+    mailer.set_plaintext_content(plaintext_content, mail_body)
+
+    # Enviar email
+    response = mailer.send(mail_body)
+    
+    return Response(response, status=status.HTTP_200_OK)
 
 class VerifyConfirmationCodeView(View):
     def post(self, request):
