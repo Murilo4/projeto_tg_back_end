@@ -101,7 +101,7 @@ def create_user(request):
 @api_view(['POST'])
 def confirmation_code(request):
     confirmation_code = generate_confirmation_code()
-    to_email = request.data.get('to_email')
+    email = request.data.get('to_email')
     user_name = request.data.get('user_name', 'Recipient')
     
     # Predefinido o corpo do email
@@ -128,7 +128,7 @@ def confirmation_code(request):
     recipients = [
         {
             "name": user_name,
-            "email": to_email,
+            "email": email,
         }
     ]
     mailer = emails.NewEmail(os.getenv('MAILERSEND_API_KEY'))
