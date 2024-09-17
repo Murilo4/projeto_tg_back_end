@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'user_name', 'nick_name', 'phone_number', 'created_at', 'updated_at')
+        fields = ('id', 'email', 'user_name', 'nick_name', 'created_at', 'updated_at')
 
     def validate_user_name(self, value):
         errors = {}
