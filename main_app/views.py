@@ -70,20 +70,17 @@ def get_by_nick(request, id):
         serializer = UserSerializer(user)
         return JsonResponse(serializer.data)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def create_user(request):
-    if request.method == 'POST':
-            try:
-                new_user = request.data
-                serializer = UserSerializer(data=new_user)
-                serializer.is_valid(raise_exception=True)
-                if serializer.is_valid():
-                    user = serializer.save()
-                    return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-            except ValidationError as e:
-                print(f'{e.detail}')
-                return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        new_user = request.data
+        serializer = UserSerializer(data=new_user)
+        serializer.is_valid(raise_exception=True)
+        new_user = serializer.save()
+        return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+    except ValidationError as e:
+        return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
             
         
 @csrf_exempt

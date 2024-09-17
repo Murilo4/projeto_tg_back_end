@@ -29,13 +29,9 @@ class UserSerializer(serializers.ModelSerializer):
     
     def validate_email(self, value):
         errors = {}
-        user_email = User.objects.filter(email=value)
 
         if User.objects.filter(email=value).exists():
             errors["email_exists"] = "EMAIL_EXISTS"
-
-        if not user_email.contains("@") or not user_email.contains(".com"):
-            errors["email_invalid"] = "EMAIL_NOT_VALID"
 
         if errors:
             raise serializers.ValidationError(errors)

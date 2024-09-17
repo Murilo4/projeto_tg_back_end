@@ -43,3 +43,4 @@ yarl==1.9.7
 supabase==2.7.4
 psycopg2==2.9.9
 psycopg2-binary==2.9.9
+django-cors-headers==4.4.0

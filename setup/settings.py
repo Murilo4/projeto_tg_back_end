@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-from .email_settings import EMAIL_PASSWORD, EMAIL_ADDRESS
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +30,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'main_app',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +50,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Exemplo para React em desenvolvimento
+    "http://localhost:8000",
+    "http://http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000"     # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
@@ -103,14 +110,6 @@ DATABASES = {
         },
     }
 }
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = EMAIL_ADDRESS
-EMAIL_HOST_PASSWORD = EMAIL_PASSWORD
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Password validation
