@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import user_manager, create_user, login_view, get_home, confirmation_code, VerifyConfirmationCodeView
+from .views import user_manager, create_user, login_view, confirmation_code, Verify_confirmation_code
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -24,7 +24,6 @@ urlpatterns = [
     path('user/update/', user_manager, name='update_user'),
     path('create/', create_user, name='create_user'),
     path('send-email/', confirmation_code, name='send-confirmation-code'),
-    path('verify-confirmation-code/', VerifyConfirmationCodeView.as_view(), name='verify-confirmation-code'),
-    path('delete/<int:id>', user_manager, name='delete_user'),
-    path('', get_home, name='home'),
+    path('verify-confirmation-code/', Verify_confirmation_code, name='verify-confirmation-code'),
+    path('delete/<int:id>', user_manager, name='delete_user')
 ]
