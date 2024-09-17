@@ -83,10 +83,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'setup.wsgi.application'
 
+python
+
+Copiar
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Altere conforme necessário
+        'LOCATION': 'redis://my-redis:6379/1',  # 'my-redis' é o nome do container
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
