@@ -85,7 +85,7 @@ def confirmation_code(request):
         return Response({"error": "Email já está em uso."}, status=status.HTTP_400_BAD_REQUEST)
     
     name = request.data.get('name', 'Recipient')
-    cache.set(f'confirmation_code_{email}', verification_data)  # Exemplo de timeout de 5 minutos
+    cache.set(f'confirmation_code_{email}', verification_data,  timeout=300)  # Exemplo de timeout de 5 minutos
 
     # Predefinido o corpo do email
     subject = "Bem-vindo ao flashVibe!"
@@ -130,9 +130,12 @@ def Verify_confirmation_code(request):
         email = request.data.get('email')
         code = request.data.get('code')
 
-        # Verificar o código no cache
         cached_code = cache.get(f'confirmation_code_{email}')
-        print(f'{cached_code}')
+
+        if cached_code is None:
+            return JsonResponse({'error': "No confirmation code found for this email."}, status=400)
+
+        # Verificar o código no cache
         if cached_code and cached_code['email'] == email:
             if cached_code and cached_code['code'] == code:
                 # Código correto, marque o e-mail como verificado
@@ -143,7 +146,6 @@ def Verify_confirmation_code(request):
             else:
                 return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
         else:
-            print(f'{cached_code}')
             return JsonResponse({'error': "Invalid email or code for this request"})
 
 
