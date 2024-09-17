@@ -85,8 +85,8 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',  # Endereço e porta do servidor Memcached
     }
 }
 
