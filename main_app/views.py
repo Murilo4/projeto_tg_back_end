@@ -128,7 +128,7 @@ def confirmation_code(request):
 @api_view(['POST'])
 def Verify_confirmation_code(request):
         email = request.data.get('email')
-        code = request.data.get('confirmation_code')
+        code = request.data.get('code')
 
         # Verificar o código no cache
         cached_code = cache.get(f'confirmation_code_{email}')
