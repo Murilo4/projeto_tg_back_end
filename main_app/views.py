@@ -75,13 +75,17 @@ def create_user(request):
 def confirmation_code(request):
     confirmation_code = generate_confirmation_code()
     email = request.data.get('email')
+    cached_code = confirmation_code
+    verification_data = {
+        'code': cached_code,
+        'email': email
+    }
       # Verificar se o e-mail já existe no banco de dados
     if User.objects.filter(email=email).exists():
         return Response({"error": "Email já está em uso."}, status=status.HTTP_400_BAD_REQUEST)
     
-    cached_code = confirmation_code
     name = request.data.get('name', 'Recipient')
-    cache.set(f'confirmation_code_{email}', cached_code)  # Exemplo de timeout de 5 minutos
+    cache.set(f'confirmation_code_{email}', verification_data)  # Exemplo de timeout de 5 minutos
 
     # Predefinido o corpo do email
     subject = "Bem-vindo ao flashVibe!"
@@ -128,14 +132,19 @@ def Verify_confirmation_code(request):
 
         # Verificar o código no cache
         cached_code = cache.get(f'confirmation_code_{email}')
-        if cached_code and cached_code == code:
-            # Código correto, marque o e-mail como verificado
-            try:
-                return JsonResponse({"message": "Email verified successfully."}, status=200)
-            except:
-                return JsonResponse({"error": "User not found."}, status=404)
+        print(f'{cached_code}')
+        if cached_code and cached_code['email'] == email:
+            if cached_code and cached_code['code'] == code:
+                # Código correto, marque o e-mail como verificado
+                try:
+                    return JsonResponse({"message": "Email verified successfully."}, status=200)
+                except:
+                    return JsonResponse({"error": "User not found."}, status=404)
+            else:
+                return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
         else:
-            return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
+            print(f'{cached_code}')
+            return JsonResponse({'error': "Invalid email or code for this request"})
 
 
 @api_view(['POST'])
