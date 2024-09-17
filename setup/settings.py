@@ -55,8 +55,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Exemplo para React em desenvolvimento
-    "http://localhost:8000",
-    "http://http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000"     # Seu domínio em produção
+    "http://localhost:8000",    # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
