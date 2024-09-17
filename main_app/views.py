@@ -8,7 +8,6 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from django.core.cache import cache
-from django.views import View
 from mailersend import emails
 from dotenv import load_dotenv
 import os
@@ -57,18 +56,6 @@ def user_manager(request, id):  # Aqui você deve receber o parâmetro id
                 return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
         except:
             JsonResponse({'error': 'User not avaible'})
-            
-        
-@api_view(['GET'])
-def get_by_nick(request, id):
-    try:
-        user = User.objects.get(pk=id)
-    except:
-        return JsonResponse(status=status.HTTP_404_NOT_FOUND)
-    
-    if request.method == 'GET':
-        serializer = UserSerializer(user)
-        return JsonResponse(serializer.data)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -93,20 +80,21 @@ def confirmation_code(request):
         return Response({"error": "Email já está em uso."}, status=status.HTTP_400_BAD_REQUEST)
     
     cached_code = confirmation_code
-    user_name = request.data.get('user_name', 'Recipient')
+    name = request.data.get('name', 'Recipient')
     cache.set(f'confirmation_code_{email}', cached_code)  # Exemplo de timeout de 5 minutos
 
     # Predefinido o corpo do email
     subject = "Bem-vindo ao flashVibe!"
     html_content = f"""
-        <h1>Olá, {user_name}!</h1>
-        <p>Bem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco.</p>
-        <p>O código de segurança de 6 digitos para confirmação:</p>
+        <h1>Olá, {name}!</h1>
+        <p>Bem-vindo ao nosso serviço.</p>
+        <p>Estamos felizes em tê-lo conosco.</p>
+        <p>O código de segurança de 6 digitos para confirmação do endereço de email:</p>
         <p>{cached_code}</p>
         <p>Se você tiver alguma dúvida, sinta-se à vontade para entrar em contato conosco.</p>
-        <p>Atenciosamente,<br>FlashVibe</p>
+        <p>Atenciosamente,<br>FlashVibe.</p>
     """
-    plaintext_content = f"Olá, {user_name}!\nBem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco."
+    plaintext_content = f"Olá, {name}!\nBem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco."
 
     mail_body = {}
     mail_from = {
@@ -116,7 +104,7 @@ def confirmation_code(request):
 
     recipients = [
         {
-            "name": user_name,
+            "name": name,
             "email": email,
         }
     ]
@@ -146,7 +134,6 @@ def Verify_confirmation_code(request):
                 return JsonResponse({"message": "Email verified successfully."}, status=200)
             except:
                 return JsonResponse({"error": "User not found."}, status=404)
-        
         else:
             return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
 
