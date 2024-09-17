@@ -1,23 +1,23 @@
-from django.shortcuts import render
 import random
-import string
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.response import Response
 from .serializers import UserSerializer, LoginSerializer
 from .models import User
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.core.cache import cache
 from django.views import View
+from mailersend import emails
+from dotenv import load_dotenv
+import os
+from django.views.decorators.csrf import csrf_exempt
+
+load_dotenv()
 
 def generate_confirmation_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-LOGIN_REDIRECT_URL = '/login'
+    return ''.join(random.choices('123456789', k=6))
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -59,12 +59,6 @@ def user_manager(request, id):  # Aqui você deve receber o parâmetro id
             JsonResponse({'error': 'User not avaible'})
             
         
-# Create your views here.
-@api_view(['GET'])
-def get_home(request):
-    return Response(status=status.HTTP_200_OK)
-
-
 @api_view(['GET'])
 def get_by_nick(request, id):
     try:
@@ -75,7 +69,6 @@ def get_by_nick(request, id):
     if request.method == 'GET':
         serializer = UserSerializer(user)
         return JsonResponse(serializer.data)
-
 
 
 @api_view(['POST'])
@@ -91,54 +84,75 @@ def create_user(request):
             except ValidationError as e:
                 print(f'{e.detail}')
                 return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+        
+@csrf_exempt
+@api_view(['POST'])
 def confirmation_code(request):
-    if request.method == 'POST':
-        email = request.data.get('email')
-        try:
-            print("Enviado o email")
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
+    confirmation_code = generate_confirmation_code()
+    email = request.data.get('email')
+      # Verificar se o e-mail já existe no banco de dados
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email já está em uso."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    cached_code = confirmation_code
+    user_name = request.data.get('user_name', 'Recipient')
+    cache.set(f'confirmation_code_{email}', cached_code)  # Exemplo de timeout de 5 minutos
 
-        confirmation_code = generate_confirmation_code()
-        cache.set(f'confirmation_code_{email}', confirmation_code, timeout=300)  # Armazenar no cache por 5 minutos
+    # Predefinido o corpo do email
+    subject = "Bem-vindo ao flashVibe!"
+    html_content = f"""
+        <h1>Olá, {user_name}!</h1>
+        <p>Bem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco.</p>
+        <p>O código de segurança de 6 digitos para confirmação:</p>
+        <p>{cached_code}</p>
+        <p>Se você tiver alguma dúvida, sinta-se à vontade para entrar em contato conosco.</p>
+        <p>Atenciosamente,<br>FlashVibe</p>
+    """
+    plaintext_content = f"Olá, {user_name}!\nBem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco."
 
-        # Salvar o código de confirmação no usuário (opcional)
-        user.confirmation_code = confirmation_code
-        user.save()
+    mail_body = {}
+    mail_from = {
+        "name": "Flash Vibe",
+        "email": "MS_U7xQX5@trial-3yxj6lj7ex5ldo2r.mlsender.net",
+    }
 
-        # Enviar e-mail de confirmação
-        try:
-            send_mail(
-                'Confirmação de Cadastro',
-                f'Seu código de confirmação é: {confirmation_code}',
-                'seuemail@dominio.com',
-                [user.email],
-                fail_silently=False,
-            )
-            return JsonResponse({"message": "Confirmation code sent."}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+    recipients = [
+        {
+            "name": user_name,
+            "email": email,
+        }
+    ]
+    mailer = emails.NewEmail(os.getenv('MAILERSEND_API_KEY'))
+    # Configurando os parâmetros do email
+    mailer.set_mail_from(mail_from, mail_body)
+    mailer.set_mail_to(recipients, mail_body)
+    mailer.set_subject(subject, mail_body)
+    mailer.set_html_content(html_content, mail_body)
+    mailer.set_plaintext_content(plaintext_content, mail_body)
 
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+    # Enviar email
+    response = mailer.send(mail_body)
+    return Response(response, status=status.HTTP_200_OK)
 
-class VerifyConfirmationCodeView(View):
-    def post(self, request):
+
+@api_view(['POST'])
+def Verify_confirmation_code(request):
         email = request.data.get('email')
         code = request.data.get('confirmation_code')
 
         # Verificar o código no cache
         cached_code = cache.get(f'confirmation_code_{email}')
-
         if cached_code and cached_code == code:
             # Código correto, marque o e-mail como verificado
-            user = User.objects.get(email=email)
-            user.is_email_verified = True  # Se você tiver esse campo no seu modelo
-            user.save()
-            return JsonResponse({"message": "Email verified successfully."}, status=200)
+            try:
+                return JsonResponse({"message": "Email verified successfully."}, status=200)
+            except:
+                return JsonResponse({"error": "User not found."}, status=404)
+        
         else:
             return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
+
 
 @api_view(['POST'])
 def login_view(request):
@@ -153,11 +167,3 @@ def login_view(request):
         }, status=status.HTTP_200_OK)
     
     return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-    
-        
-
-    
-    
