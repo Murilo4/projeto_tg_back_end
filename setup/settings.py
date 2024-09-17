@@ -83,9 +83,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'setup.wsgi.application'
 
-python
 
-Copiar
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
