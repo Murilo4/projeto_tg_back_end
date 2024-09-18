@@ -16,7 +16,10 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import create_user, login_view, confirmation_code, Verify_confirmation_code, user_account, user_delete, user_update
+from .views.confirmation import confirmation_code, Verify_confirmation_code
+from .views.user_manager import user_account, user_delete, user_update
+from .views.create import create_user
+from .views.login import login_view
 
 urlpatterns = [
     path('login/', login_view, name='login'),
