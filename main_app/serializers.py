@@ -45,25 +45,3 @@ class UserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)  # Cria um novo objeto User
         user.save()  # Salva no banco de dados
         return user
-    
-
-class LoginSerializer(serializers.Serializer):
-    user_name = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
-
-    def validate(self, data):
-        username = data.get('user_name')
-        password = data.get('password_hash')
-        
-
-        try:
-            user = User.objects.get(user_name=username)
-        
-            if not User.check_password(self, password):
-                print('ih rapaiz')  # Verifica a senha com o método do modelo
-                raise ValidationError('Invalid credentials')
-        except User.DoesNotExist:
-            raise ValidationError('Invalid credentials')
-
-        data['user'] = user  # Adiciona o usuário autenticado aos atributos
-        return data

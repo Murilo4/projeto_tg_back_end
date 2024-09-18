@@ -1,62 +1,24 @@
-import random
 from rest_framework import status
 from .models import User
 from rest_framework.response import Response
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,  permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.authtoken.models import Token
+from .code_generator import generate_confirmation_code
 from django.core.cache import cache
 from mailersend import emails
 from dotenv import load_dotenv
 import os
+from firebase_admin import auth
+from django.contrib.auth import login
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import logout
+from rest_framework.permissions import IsAuthenticated
 
 load_dotenv()
 
-def generate_confirmation_code():
-    return ''.join(random.choices('123456789', k=6))
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def user_manager(request, id):  # Aqui você deve receber o parâmetro id
-    if request.method == 'GET':
-        try:
-            user = User.objects.get(pk=id)  # Usa o id recebido na URL
-            serializer = UserSerializer(user)
-            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'PUT':
-        try:
-            user = User.objects.get(pk=id)
-            serializer = UserSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse(serializer.data, status=status.HTTP_202_ACCEPTED)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    elif request.method == 'DELETE':
-        try:
-            user = User.objects.get(pk=id)
-            user = request.user
-            if user.is_authenticated:
-                user.delete()
-                return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-        except:
-            JsonResponse({'error': 'User not avaible'})
-
+# ------------------ View para criação de usuario ---------------------
 @csrf_exempt
 @api_view(['POST'])
 def create_user(request):
@@ -68,8 +30,9 @@ def create_user(request):
         return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
     except ValidationError as e:
         return JsonResponse({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+    
             
-        
+# ------------------ View para envio de código de confirmação de email ---------------------      
 @csrf_exempt
 @api_view(['POST'])
 def confirmation_code(request):
@@ -125,6 +88,7 @@ def confirmation_code(request):
     return Response(response, status=status.HTTP_200_OK)
 
 
+# ------------------ View para validar código inserido pelo usuario na validação de email ---------------------     
 @api_view(['POST'])
 def Verify_confirmation_code(request):
         email = request.data.get('email')
@@ -149,16 +113,88 @@ def Verify_confirmation_code(request):
             return JsonResponse({'error': "Invalid email or code for this request"})
 
 
+# ------------------ View para logar o usuario e gerar o token de sessão ---------------------     
 @api_view(['POST'])
 def login_view(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data['user']  # Obtém a instância do usuário autenticado
-        token, created = Token.objects.get_or_create(user=user)  # Cria ou obtém o token do usuário
-        
-        return JsonResponse({
-            'token': token.key,        # Retorna o token
-            'user_id': user.id         # Retorna o ID do usuário autenticado
-        }, status=status.HTTP_200_OK)
+    id_token = request.data.get('id_token')
+
+    if not id_token:
+        return JsonResponse({'error': 'ID Token is required.'}, status=400)
+
+    try:
+        # Verifica o ID Token com Firebase
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+
+        # Aqui você pode buscar ou criar um usuário Django associado ao UID do Firebase
+        user, created = User.objects.get_or_create(username=uid)
+
+        # Realiza o login do usuário
+        login(request, user)
+
+        # Cria um cookie de sessão
+        response = JsonResponse({'message': 'User authenticated successfully.'})
+        response.set_cookie('sessionid', request.COOKIES.get('sessionid'), httponly=True)
+
+        return response
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
     
-    return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# ------------------ View para deslogar o usuario ---------------------     
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)  # Remove a sessão do usuário
+    response = JsonResponse({'message': 'User logged out successfully.'})
+    response.delete_cookie('sessionid')  # Opcional: remove o cookie de sessão
+    return response
+
+# ------------------ View para deletar um usuario do banco de dados ---------------------     
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def user_delete(request):
+    if request.method == 'DELETE':
+            try:
+                user = User.objects.get(pk=id)
+                user = request.user
+                if user.is_authenticated:
+                    user.delete()
+                    return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+                else:
+                    return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+            except:
+                JsonResponse({'error': 'User not avaible'})
+    
+
+# ------------------ View para atualizar algum dado do cliente ---------------------     
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def user_update(request):
+    if request.method == 'PUT':
+            try:
+                user = User.objects.get(pk=id)
+                serializer = UserSerializer(user, data=request.data, partial=True)
+                if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    return JsonResponse(serializer.data, status=status.HTTP_202_ACCEPTED)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            except ValidationError as e:
+
+                return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+# ------------------ View para acessar o cadastro do usuario  ---------------------     
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_account(request):
+    if request.method == 'GET':
+            try:
+                user = User.objects.get(pk=id)  # Usa o id recebido na URL
+                serializer = UserSerializer(user)
+                return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

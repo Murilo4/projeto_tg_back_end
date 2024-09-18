@@ -16,14 +16,14 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import user_manager, create_user, login_view, confirmation_code, Verify_confirmation_code
+from .views import create_user, login_view, confirmation_code, Verify_confirmation_code, user_account, user_delete, user_update
 
 urlpatterns = [
     path('login/', login_view, name='login'),
-    path('user/<int:id>/', user_manager, name='get_user'),
-    path('user/update/', user_manager, name='update_user'),
+    path('user/<int:id>/', user_account, name='get_user'),
+    path('user/update/', user_update, name='update_user'),
     path('create/', create_user, name='create_user'),
     path('send-email/', confirmation_code, name='send-confirmation-code'),
     path('verify-confirmation-code/', Verify_confirmation_code, name='verify-confirmation-code'),
-    path('delete/<int:id>', user_manager, name='delete_user')
+    path('delete/<int:id>', user_delete, name='delete_user')
 ]
