@@ -1,14 +1,13 @@
 from rest_framework import status
-from ..models import User
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from ..code_generator import generate_confirmation_code
 from django.core.cache import cache
-from mailersend import emails
 from dotenv import load_dotenv
-import os
 from django.views.decorators.csrf import csrf_exempt
+from setup.settings import EMAIL_HOST_USER
+from django.core.mail import EmailMultiAlternatives
 
 load_dotenv()
          
@@ -16,57 +15,43 @@ load_dotenv()
 @csrf_exempt
 @api_view(['POST'])
 def confirmation_code(request):
-    confirmation_code = generate_confirmation_code()
-    email = request.data.get('email')
-    cached_code = confirmation_code
-    verification_data = {
-        'code': cached_code,
+    try:
+        generate_code = generate_confirmation_code()
+        email = request.data.get('email')
+        name = request.data.get('name')
+        verification_data = {
+        'code': generate_code,
         'email': email
     }
-      # Verificar se o e-mail já existe no banco de dados
-    if User.objects.filter(email=email).exists():
-        return Response({"error": "Email já está em uso."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    name = request.data.get('name', 'Recipient')
-    cache.set(f'confirmation_code_{email}', verification_data,  timeout=300)  # Exemplo de timeout de 5 minutos
+        cache.set(f'confirmation_code_{email}', verification_data,  timeout=300)
+        # Manually open the connection
 
-    # Predefinido o corpo do email
-    subject = "Bem-vindo ao flash Vibe!"
-    html_content = f"""
-        <h1>Olá, {name}!</h1>
-        <p>Bem-vindo ao nosso serviço.</p>
-        <p>Estamos felizes em tê-lo conosco.</p>
-        <p>O código de segurança de 6 digitos para confirmação do endereço de email:</p>
-        <p>{cached_code}</p>
-        <p>Se você tiver alguma dúvida, sinta-se à vontade para entrar em contato conosco.</p>
-        <p>Atenciosamente,<br>Flash Vibe.</p>
-    """
-    plaintext_content = f"Olá, {name}!\nBem-vindo ao nosso serviço. Estamos felizes em tê-lo conosco."
-
-    mail_body = {}
-    mail_from = {
-        "name": "Flash Vibe",
-        "email": "MS_U7xQX5@trial-3yxj6lj7ex5ldo2r.mlsender.net",
-    }
-
-    recipients = [
-        {
-            "name": name,
-            "email": email,
-        }
-    ]
-    mailer = emails.NewEmail(os.getenv('MAILERSEND_API_KEY'))
-    # Configurando os parâmetros do email
-    mailer.set_mail_from(mail_from, mail_body)
-    mailer.set_mail_to(recipients, mail_body)
-    mailer.set_subject(subject, mail_body)
-    mailer.set_html_content(html_content, mail_body)
-    mailer.set_plaintext_content(plaintext_content, mail_body)
-
-    # Enviar email
-    response = mailer.send(mail_body)
-    return Response(response, status=status.HTTP_200_OK)
-
+        formatted_code = " ".join(generate_code)
+        subject = "Flash vibe codigo de confirmação " 
+        html_message = (f"""
+        <p style="font-size:20px; color: #000;"><strong>{name}</strong>,</p>
+        <p style="font-size:20px; color: #000;">Obrigado por se registrar! Agora confirmaremos seu e-mail.</p>
+        <p style="font-size:20px; color: #000;">Insira o código no campo que foi solicitado:</p>
+        <p style="display: inline-block;background-color: #D3D3D3; padding: 10px; border-radius: 5px; font-size: 24px;">
+            <strong>{formatted_code}</strong>
+        </p>
+        <p style="font-size:20px; color: #000;">Qualquer dúvida, entre em contato conosco.</p>
+        """
+        )
+        email_message = EmailMultiAlternatives(
+        subject=subject,
+        body=html_message,
+        from_email=EMAIL_HOST_USER,
+        to=[email],
+        )
+        
+        email_message.attach_alternative(html_message, "text/html")
+        email_message.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        # Captura e imprime a exceção
+        print(str(e))  # Para debug, você pode registrar isso em um log
+        return JsonResponse({"error": "An error occurred: " + str(e)}, status=500)
 
 # ------------------ View para validar código inserido pelo usuario na validação de email ---------------------     
 

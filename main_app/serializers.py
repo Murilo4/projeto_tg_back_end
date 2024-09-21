@@ -1,8 +1,5 @@
 from rest_framework import serializers
 from .models import User
-from django.contrib.auth.hashers import make_password, check_password
-from rest_framework.exceptions import ValidationError
-from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):

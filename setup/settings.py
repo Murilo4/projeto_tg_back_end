@@ -54,7 +54,8 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Exemplo para React em desenvolvimento
-    "http://localhost:8000",    # Seu domínio em produção
+    "http://localhost:8000",
+    "http://localhost:8001"       # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
@@ -63,6 +64,15 @@ REST_FRAMEWORD = {'DEFAULT_PERMISSION_CLASSES': [
     'rest_frameword.permissions.AllowAny'
 ]}
 
+# email credential for sending email
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_HOST_USER='flashvibe11@gmail.com'
+EMAIL_HOST_PASSWORD='qyscwwxrhudmuenf'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [
     {
@@ -102,8 +112,7 @@ DATABASES = {
         'PORT': "14319",
         'OPTIONS': {
             'ssl': {
-                'ca': './ca.pem',
-                
+                'ca': './ca.pem', 
             },
         },
     }
