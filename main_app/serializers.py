@@ -1,14 +1,11 @@
 from rest_framework import serializers
 from .models import User
-from django.contrib.auth.hashers import make_password, check_password
-from rest_framework.exceptions import ValidationError
-from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'user_name', 'nick_name', 'phone_number', 'created_at', 'updated_at')
+        fields = ('id', 'email', 'user_name', 'nick_name', 'created_at', 'updated_at')
 
     def validate_user_name(self, value):
         errors = {}
@@ -29,13 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
     
     def validate_email(self, value):
         errors = {}
-        user_email = User.objects.filter(email=value)
 
         if User.objects.filter(email=value).exists():
             errors["email_exists"] = "EMAIL_EXISTS"
-
-        if not user_email.contains("@") or not user_email.contains(".com"):
-            errors["email_invalid"] = "EMAIL_NOT_VALID"
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -49,25 +42,3 @@ class UserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)  # Cria um novo objeto User
         user.save()  # Salva no banco de dados
         return user
-    
-
-class LoginSerializer(serializers.Serializer):
-    user_name = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
-
-    def validate(self, data):
-        username = data.get('user_name')
-        password = data.get('password_hash')
-        
-
-        try:
-            user = User.objects.get(user_name=username)
-        
-            if not User.check_password(self, password):
-                print('ih rapaiz')  # Verifica a senha com o método do modelo
-                raise ValidationError('Invalid credentials')
-        except User.DoesNotExist:
-            raise ValidationError('Invalid credentials')
-
-        data['user'] = user  # Adiciona o usuário autenticado aos atributos
-        return data
