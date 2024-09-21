@@ -2,10 +2,15 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build: ./main_app
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    environment:
-      - PYTHONUNBUFFERED=1
+      - ./main_app:/app  # Mapeia o diretório correto
+
+  app_novo:
+    build: ./decks
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./decks:/app  # Mapeia o diretório correto
