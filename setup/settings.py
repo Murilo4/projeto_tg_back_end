@@ -29,6 +29,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'main_app',
+    'deck_app',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'supabase',
     'rest_framework.authtoken',
 ]
 

@@ -7,10 +7,16 @@ services:
       - "8000:8000"
     volumes:
       - ./main_app:/app  # Mapeia o diretório correto
+    environment:
+      - DJANGO_SETTINGS_MODULE=setup.settings
+      - PYTHONPATH=/app
 
-  app_novo:
-    build: ./decks
+  deck:
+    build: ./deck_app
     ports:
       - "8001:8000"
     volumes:
-      - ./decks:/app  # Mapeia o diretório correto
+      - ./deck_app:/app  # Mapeia o diretório correto
+    environment:
+      - DJANGO_SETTINGS_MODULE=setup.settings
+      - PYTHONPATH=/app
