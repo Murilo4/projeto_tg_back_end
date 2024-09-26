@@ -93,27 +93,25 @@ def send_reset_email(user):
 
 
 @api_view(['POST'])
-def reset_password(request):
+def verify_reset_token(request):
     uidb64 = request.data.get('uid')
     token = request.data.get('token')
-    new_password = request.data.get('new_password')
 
-    if reset_user_password(uidb64, token, new_password):
-        return Response({"message": "Senha atualizada com sucesso!"}, status=status.HTTP_200_OK)
+    # Verifica se o token é válido
+    if is_valid_token(uidb64, token):
+        return Response({"message": "Token válido!"}, status=status.HTTP_200_OK)
     return Response({"error": "Token inválido ou expirado!"}, status=status.HTTP_400_BAD_REQUEST)
 
-def reset_user_password(uidb64, token, new_password):
+def is_valid_token(uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+        return False
 
-    if user is not None and default_token_generator.check_token(user, token):
-        user.set_password(new_password)
-        user.save()
-        return True
-    return False
+    # Verifica se o token é válido para o usuário
+    return default_token_generator.check_token(user, token)
+
 
 # ------------------ View para acessar o cadastro do usuario  ---------------------     
 @api_view(['GET'])

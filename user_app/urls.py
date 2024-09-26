@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.urls import path
 from .views.confirmation import confirmation_code, Verify_confirmation_code
-from .views.user_manager import user_account, user_delete, user_update, user_password_update, reset_password
+from .views.user_manager import user_account, user_delete, user_update, user_password_update, verify_reset_token
 from .views.create import create_user
 from .views.login import login_view
 
@@ -30,5 +30,5 @@ urlpatterns = [
     path('verify-confirmation-code/', Verify_confirmation_code, name='verify-confirmation-code'),
     path('delete/<int:id>', user_delete, name='delete_user'),
     path('user/reset-password/', user_password_update, name='user_password_update'),
-    path('user/confirm-reset-password/', reset_password, name='reset_password')
+    path('user/confirm-reset-password/', verify_reset_token, name='verify_reset_token')
 ]
