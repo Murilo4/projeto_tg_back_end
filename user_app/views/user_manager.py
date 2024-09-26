@@ -53,7 +53,7 @@ def user_update(request):
     
 @csrf_exempt
 @api_view(['POST'])
-def user_password_update(self, request):
+def user_password_update(request):
     email = request.data.get('email')
     try:
         user = User.objects.get(email=email)
@@ -61,7 +61,7 @@ def user_password_update(self, request):
         return Response({"error": "Email não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
     # Gerar o token e enviar o email
-    self.send_reset_email(user)
+    send_reset_email(user)
     return Response({"message": "Email enviado!"}, status=status.HTTP_200_OK)
 
 
