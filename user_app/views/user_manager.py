@@ -67,23 +67,25 @@ def user_password_update(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return Response({"error": "Email não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({"error": "Email não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
     # Gerar o token e enviar o email
     send_reset_email(user)
-    return Response({"message": "Email enviado!"}, status=status.HTTP_200_OK)
+    return JsonResponse({"message": "Email enviado!"}, status=status.HTTP_200_OK)
 
 
 def send_reset_email(user):
     token = make_custom_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
-    link = f"https://localhost:3000/redefinir-senha?uid={uid}&token={token}"
+    link = f"http://localhost:3000/redefinir-senha?uid={uid}&token={token}"
 
     subject = "Flash vibe " 
     html_message = (f"""
         <p style="font-size:20px; color: #000;">Segue o link para redefinição de senha, se você não solicitou a troca de senha, desconsidere este link</p>
-        <p style="display: inline-block;background-color: #7fcfff; padding: 10px; border-radius: 5px; font-size: 24px;">
-            <strong>{link}</strong>
+         <p style="display: inline-block;">
+            <a href="{link}" style="background-color: #7fcfff; padding: 10px; border-radius: 5px; font-size: 24px; text-decoration: none; color: #000;">
+                <strong>Redefinir Senha</strong>
+            </a>
         </p>
         <p style="font-size:20px; color: #000;">Qualquer dúvida, entre em contato conosco.</p>
         """
@@ -97,7 +99,7 @@ def send_reset_email(user):
         
     email_message.attach_alternative(html_message, "text/html")
     email_message.send()
-    return Response(status=status.HTTP_200_OK)
+    return JsonResponse(status=status.HTTP_200_OK)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -107,8 +109,8 @@ def verify_reset_token(request):
 
     # Verifica se o token é válido
     if is_valid_token(uidb64, token):
-        return Response({"message": "Token válido!"}, status=status.HTTP_200_OK)
-    return Response({"error": "Token inválido ou expirado!"}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"message": "Token válido!"}, status=status.HTTP_200_OK)
+    return JsonResponse({"error": "Token inválido ou expirado!"}, status=status.HTTP_400_BAD_REQUEST)
 
 def is_valid_token(uidb64, token):
     try:
@@ -118,7 +120,8 @@ def is_valid_token(uidb64, token):
         return False
 
     # Verifica se o token é válido para o usuário
-    return default_token_generator.check_token(user, token)
+    if(default_token_generator.check_token(user, token)):
+        return JsonResponse('codigo verificado com sucesso', status=status.HTTP_200_OK) 
 
 
 # ------------------ View para acessar o cadastro do usuario  ---------------------  
