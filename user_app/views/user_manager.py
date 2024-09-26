@@ -30,15 +30,15 @@ def make_custom_token(user):
 def user_delete(request):
     if request.method == 'DELETE':
             try:
-                user = User.objects.get(pk=id)
-                user = request.user
-                if user.is_authenticated:
-                    user.delete()
-                    return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+                user = User.objects.get(pk=id) # recebe o id do usuario
+                user = request.user # valida o cadastro completo do usuario
+                if user.is_authenticated: # verifica se o usuario está autenticado
+                    user.delete() # se estiver autenticado realiza a exclusão
+                    return Response({"sucess": True, "message":"Usuário excluido com sucesso"}, status=status.HTTP_204_NO_CONTENT)
                 else:
-                    return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+                    return Response({"sucess": False, "message":"Usuário não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
             except:
-                JsonResponse({'error': 'User not avaible'})
+                Response({"sucess": False, "message":"Usuário não está disponivel"}, status=status.HTTP_204_NO_CONTENT)
     
 
 # ------------------ View para atualizar algum dado do cliente ---------------------     
@@ -47,18 +47,18 @@ def user_delete(request):
 def user_update(request):
     if request.method == 'PUT':
             try:
-                user = User.objects.get(pk=id)
-                serializer = UserSerializer(user, data=request.data, partial=True)
-                if serializer.is_valid(raise_exception=True):
+                user = User.objects.get(pk=id) # recebe o id do usuario
+                serializer = UserSerializer(user, data=request.data, partial=True) # salva os dados do usuario 
+                if serializer.is_valid(raise_exception=True): 
                     serializer.save()
-                    return JsonResponse(serializer.data, status=status.HTTP_202_ACCEPTED)
+                    return Response(serializer.data, {"sucess": True, "message":"Usuário atualizado com sucesso"},status=status.HTTP_202_ACCEPTED)
             except User.DoesNotExist:
-                return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"sucess": False, "message":"Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
             except ValidationError as e:
 
-                return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"sucess": False, "message":{e}}, status=status.HTTP_400_BAD_REQUEST)
             
-            return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return JsonResponse({"sucess": False, "message":"Metódo não autorizado"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
 @csrf_exempt
 @api_view(['POST'])
@@ -67,11 +67,11 @@ def user_password_update(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return JsonResponse({"error": "Email não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"sucess": False, "message":"Email não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
     # Gerar o token e enviar o email
     send_reset_email(user)
-    return JsonResponse({"message": "Email enviado!"}, status=status.HTTP_200_OK)
+    return Response({"sucess": True, "message":"enviando email"}, status=status.HTTP_200_OK)
 
 
 def send_reset_email(user):
@@ -99,7 +99,7 @@ def send_reset_email(user):
         
     email_message.attach_alternative(html_message, "text/html")
     email_message.send()
-    return Response(status=status.HTTP_200_OK)
+    return Response({"sucess": True, "message":"email enviado com sucesso"}, status=status.HTTP_200_OK)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -109,8 +109,8 @@ def verify_reset_token(request):
 
     # Verifica se o token é válido
     if is_valid_token(uidb64, token):
-        return Response({"message": "Token válido!"}, status=status.HTTP_200_OK)
-    return Response({"error": "Token inválido ou expirado!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"sucess": True, "message":"Token válido"}, status=status.HTTP_200_OK)
+    return Response({"sucess": False, "message":"Token inválido ou expirado!"}, status=status.HTTP_400_BAD_REQUEST)
 
 def is_valid_token(uidb64, token):
     try:
@@ -121,7 +121,7 @@ def is_valid_token(uidb64, token):
 
     # Verifica se o token é válido para o usuário
     if(default_token_generator.check_token(user, token)):
-        return Response('codigo verificado com sucesso', status=status.HTTP_200_OK) 
+        return Response({"sucess": True, "message":"Código verificado com sucesso"}, status=status.HTTP_200_OK) 
 
 
 # ------------------ View para acessar o cadastro do usuario  ---------------------  
@@ -132,8 +132,8 @@ def user_account(request):
             try:
                 user = User.objects.get(pk=id)  # Usa o id recebido na URL
                 serializer = UserSerializer(user)
-                return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.data, {"sucess": True, "message":"Usuário encontrado"}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
-                return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-            except Exception as e:
-                return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"sucess": False, "message":"Usuário não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            except Exception:
+                return Response({"sucess": False, "message":"Não foi possível validar o usuário"}, status=status.HTTP_400_BAD_REQUEST)

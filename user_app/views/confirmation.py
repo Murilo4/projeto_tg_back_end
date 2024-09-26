@@ -16,17 +16,17 @@ load_dotenv()
 @api_view(['POST'])
 def confirmation_code(request):
     try:
-        generate_code = generate_confirmation_code()
-        email = request.data.get('email')
-        name = request.data.get('name')
-        verification_data = {
-        'code': generate_code,
+        generate_code = generate_confirmation_code() # chama a função de geração de codigo
+        email = request.data.get('email') # recebe o email do front end
+        name = request.data.get('name')  # recebe o nome do front end
+        verification_data = { # armazena o codigo e o email 
+        'code': generate_code, 
         'email': email
     }
-        cache.set(f'confirmation_code_{email}', verification_data,  timeout=300)
+        cache.set(f'confirmation_code_{email}', verification_data,  timeout=300) # salva o email e o código no cache do django
         # Manually open the connection
 
-        formatted_code = " ".join(generate_code)
+        formatted_code = " ".join(generate_code) # forma o codigo para visualização no email
         subject = "Flash vibe codigo de confirmação " 
         html_message = (f"""
         <p style="font-size:20px; color: #000;"><strong>{name}</strong>,</p>
@@ -43,40 +43,39 @@ def confirmation_code(request):
         body=html_message,
         from_email=EMAIL_HOST_USER,
         to=[email],
-        )
+        ) # estrutura para o envio do email
         
         email_message.attach_alternative(html_message, "text/html")
-        email_message.send()
-        return Response(status=status.HTTP_200_OK)
+        email_message.send() # envia o email
+        return Response({"sucess": True, "message":"email enviado com sucesso"}, status=status.HTTP_200_OK) # retorna a resposta, com a mensagem de envio e o status
     except Exception as e:
         # Captura e imprime a exceção
-        print(str(e))  # Para debug, você pode registrar isso em um log
-        return JsonResponse({"error": "An error occurred: " + str(e)}, status=500)
+        return Response({"sucess": False, "message": "não foi possivel enviar o email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) # retorna o erro que não foi possivel enviar
 
 # ------------------ View para validar código inserido pelo usuario na validação de email ---------------------     
 
 @api_view(['POST'])
 def Verify_confirmation_code(request):
-        email = request.data.get('email')
-        code = request.data.get('code')
+        email = request.data.get('email') # recebe o email do front end
+        code = request.data.get('code') # recebe o codigo do front end
 
-        cached_code = cache.get(f'confirmation_code_{email}')
+        cached_code = cache.get(f'confirmation_code_{email}') # pega o email do cache do django
 
-        if cached_code is None:
-            return JsonResponse({'error': "No confirmation code found for this email."}, status=400)
+        if cached_code is None: # se não for encontrado o código será retornado que o codigo é invalido
+            return Response({'sucess': False, "message": "Nenhum código de confirmação encontrado para este email"}, status=status.HTTP_400_BAD_REQUEST) 
 
         # Verificar o código no cache
-        if cached_code and cached_code['email'] == email:
-            if cached_code and cached_code['code'] == code:
+        if cached_code and cached_code['email'] == email: # valida se o email está correto
+            if cached_code and cached_code['code'] == code: # valida se o codigo está correto
                 # Código correto, marque o e-mail como verificado
                 try:
-                    return JsonResponse({"message": "Email verified successfully."}, status=200)
+                    return Response({"sucess": True, "message":"Email verified successfully."}, status=status.HTTP_200_OK)
                 except:
-                    return JsonResponse({"error": "User not found."}, status=404)
+                    return Response({"sucess": False,"message":"Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
             else:
-                return JsonResponse({"error": "Invalid or expired confirmation code."}, status=400)
+                return Response({"sucess": False, "message":"Código invalido ou expirado."}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return JsonResponse({'error': "Invalid email or code for this request"})
+            return Response({"sucess": False, "message":"Email ou código invalido para essa requisição."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 

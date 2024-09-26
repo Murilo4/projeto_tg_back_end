@@ -11,13 +11,13 @@ class UserSerializer(serializers.ModelSerializer):
         errors = {}
 
         if User.objects.filter(user_name=value).exists():
-            errors["username_exists"] = "USERNAME_EXISTS"
+            errors["username_exists"] = "Usuário já existe"
         # Verificar o tamanho do nome de usuário
         if len(value) < 2:
-            errors["username_too_short"] = "USERNAME_TOO_SHORT"
+            errors["username_too_short"] = "Nome muito pequeno"
 
         if len(value) > 50:
-            errors["username_too_big"] = "USERNAME_TOO_BIG"
+            errors["username_too_big"] = "Nome muito grande"
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -28,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         errors = {}
 
         if User.objects.filter(email=value).exists():
-            errors["email_exists"] = "EMAIL_EXISTS"
+            errors["email_exists"] = "Email já registrado"
 
         if errors:
             raise serializers.ValidationError(errors)
