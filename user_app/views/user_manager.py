@@ -69,7 +69,7 @@ def user_password_update(self, request):
 def send_reset_email(user):
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
-    link = f"https://localhost:3000/reset-password/?uid={uid}&token={token}"
+    link = f"https://localhost:3000/redefinir-senha?uid={uid}&token={token}"
 
     subject = "Flash vibe " 
     html_message = (f"""
