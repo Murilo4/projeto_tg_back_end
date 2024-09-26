@@ -52,7 +52,7 @@ def user_update(request):
             return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
 @csrf_exempt
-@api_view(['PUT'])
+@api_view(['POST'])
 def user_password_update(self, request):
     email = request.data.get('email')
     try:
