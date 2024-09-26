@@ -14,8 +14,9 @@ from django.utils.encoding import force_str
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from setup.settings import EMAIL_HOST_USER
-
-# ------------------ View para deletar um usuario do banco de dados ---------------------     
+from django.views.decorators.csrf import csrf_exempt
+# ------------------ View para deletar um usuario do banco de dados ---------------------
+@csrf_exempt     
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def user_delete(request):
@@ -33,6 +34,7 @@ def user_delete(request):
     
 
 # ------------------ View para atualizar algum dado do cliente ---------------------     
+@csrf_exempt
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def user_update(request):
@@ -51,7 +53,7 @@ def user_update(request):
             
             return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
-
+@csrf_exempt
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def user_password_update(self, request):
@@ -91,7 +93,7 @@ def send_reset_email(user):
     email_message.send()
     return Response(status=status.HTTP_200_OK)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def verify_reset_token(request):
     uidb64 = request.data.get('uid')
@@ -113,7 +115,8 @@ def is_valid_token(uidb64, token):
     return default_token_generator.check_token(user, token)
 
 
-# ------------------ View para acessar o cadastro do usuario  ---------------------     
+# ------------------ View para acessar o cadastro do usuario  ---------------------  
+@csrf_exempt   
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_account(request):
