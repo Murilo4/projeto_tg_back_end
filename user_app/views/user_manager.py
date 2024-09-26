@@ -11,10 +11,19 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from setup.settings import EMAIL_HOST_USER
 from django.views.decorators.csrf import csrf_exempt
+import hashlib
+import time
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+
+def make_custom_token(user):
+    timestamp = str(int(time.time()))
+    hash_string = f"{user.pk}-{timestamp}"
+    token = hashlib.sha256(hash_string.encode()).hexdigest()
+    return f"{token}-{timestamp}"
 # ------------------ View para deletar um usuario do banco de dados ---------------------
 @csrf_exempt     
 @api_view(['DELETE'])
@@ -66,7 +75,7 @@ def user_password_update(request):
 
 
 def send_reset_email(user):
-    token = default_token_generator.make_token(user)
+    token = make_custom_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     link = f"https://localhost:3000/redefinir-senha?uid={uid}&token={token}"
 
