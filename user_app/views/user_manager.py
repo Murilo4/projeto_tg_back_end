@@ -18,7 +18,6 @@ from django.views.decorators.csrf import csrf_exempt
 # ------------------ View para deletar um usuario do banco de dados ---------------------
 @csrf_exempt     
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
 def user_delete(request):
     if request.method == 'DELETE':
             try:
@@ -36,7 +35,6 @@ def user_delete(request):
 # ------------------ View para atualizar algum dado do cliente ---------------------     
 @csrf_exempt
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
 def user_update(request):
     if request.method == 'PUT':
             try:
@@ -55,7 +53,6 @@ def user_update(request):
     
 @csrf_exempt
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
 def user_password_update(self, request):
     email = request.data.get('email')
     try:
@@ -118,7 +115,6 @@ def is_valid_token(uidb64, token):
 # ------------------ View para acessar o cadastro do usuario  ---------------------  
 @csrf_exempt   
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def user_account(request):
     if request.method == 'GET':
             try:
