@@ -5,35 +5,7 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'user_name', 'nick_name', 'created_at', 'updated_at')
-
-    def validate_user_name(self, value):
-        errors = {}
-
-        if User.objects.filter(user_name=value).exists():
-            errors["username_exists"] = "Usuário já existe"
-        # Verificar o tamanho do nome de usuário
-        if len(value) < 2:
-            errors["username_too_short"] = "Nome muito pequeno"
-
-        if len(value) > 50:
-            errors["username_too_big"] = "Nome muito grande"
-
-        if errors:
-            raise serializers.ValidationError(errors)
-        
-        return value
-    
-    def validate_email(self, value):
-        errors = {}
-
-        if User.objects.filter(email=value).exists():
-            errors["email_exists"] = "Email já registrado"
-
-        if errors:
-            raise serializers.ValidationError(errors)
-        
-        return value
+        fields = ('id', 'email', 'user_name', 'nick_name')
     
     def create(self, validated_data):
         # Hash a senha antes de salvar
@@ -42,3 +14,13 @@ class UserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)  # Cria um novo objeto User
         user.save()  # Salva no banco de dados
         return user
+    
+class UserChangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'user_name', 'nick_name', 'phone_number', 'user_img')
+
+        def update(seld, validated_data):
+            user = User(**validated_data)
+            user.save()
+            return user

@@ -39,8 +39,14 @@ def login_view(request):
 def logout_user(request):
     logout(request)
     try:  # Remove a sessão do usuário
-        response = JsonResponse({'message': 'User logged out successfully.'})
+        response = JsonResponse({
+            'sucess': True,
+            'message': 'User logged out successfully.'}, 
+            status=status.HTTP_200_OK)
         response.delete_cookie('sessionid')  # Opcional: remove o cookie de sessão
         return response
     except:
-        Response({"sucess": False, "message":"não foi possivel encontrar nenhuma sessão"}, status=status.HTTP_204_NO_CONTENT)
+        Response({
+            "sucess": False,
+            "message":"não foi possivel encontrar nenhuma sessão"}, 
+            status=status.HTTP_204_NO_CONTENT)

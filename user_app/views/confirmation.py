@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from django.views.decorators.csrf import csrf_exempt
 from setup.settings import EMAIL_HOST_USER
 from django.core.mail import EmailMultiAlternatives
+from django.http import JsonResponse
 
 load_dotenv()
          
@@ -47,10 +48,10 @@ def confirmation_code(request):
         
         email_message.attach_alternative(html_message, "text/html")
         email_message.send() # envia o email
-        return Response({"sucess": True, "message":"email enviado com sucesso"}, status=status.HTTP_200_OK) # retorna a resposta, com a mensagem de envio e o status
+        return JsonResponse({"sucess": True, "message":"email enviado com sucesso"}, status=status.HTTP_200_OK) # retorna a resposta, com a mensagem de envio e o status
     except Exception as e:
         # Captura e imprime a exceção
-        return Response({"sucess": False, "message": "não foi possivel enviar o email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) # retorna o erro que não foi possivel enviar
+        return JsonResponse({"sucess": False, "message": "não foi possivel enviar o email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) # retorna o erro que não foi possivel enviar
 
 # ------------------ View para validar código inserido pelo usuario na validação de email ---------------------     
 
@@ -62,20 +63,23 @@ def Verify_confirmation_code(request):
         cached_code = cache.get(f'confirmation_code_{email}') # pega o email do cache do django
 
         if cached_code is None: # se não for encontrado o código será retornado que o codigo é invalido
-            return Response({'sucess': False, "message": "Nenhum código de confirmação encontrado para este email"}, status=status.HTTP_400_BAD_REQUEST) 
-
-        # Verificar o código no cache
-        if cached_code and cached_code['email'] == email: # valida se o email está correto
-            if cached_code and cached_code['code'] == code: # valida se o codigo está correto
-                # Código correto, marque o e-mail como verificado
-                try:
-                    return Response({"sucess": True, "message":"Email verified successfully."}, status=status.HTTP_200_OK)
-                except:
-                    return Response({"sucess": False,"message":"Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'sucess': False, "message": "Nenhum código de confirmação encontrado para este email"}, status=status.HTTP_400_BAD_REQUEST) 
+        try:
+            # Verificar o código no cache
+            if cached_code and cached_code['email'] == email: # valida se o email está correto
+                if cached_code and cached_code['code'] == code: # valida se o codigo está correto
+                    # Código correto, marque o e-mail como verificado
+                    try:
+                        return JsonResponse({"sucess": True, "message":"Email verified successfully."}, status=status.HTTP_200_OK)
+                    except:
+                        return JsonResponse({"sucess": False,"message":"Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+                else:
+                    return JsonResponse({"sucess": False, "message":"Código invalido ou expirado."}, status=status.HTTP_404_NOT_FOUND)
             else:
-                return Response({"sucess": False, "message":"Código invalido ou expirado."}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response({"sucess": False, "message":"Email ou código invalido para essa requisição."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                return JsonResponse({"sucess": False, "message":"Email ou código invalido para essa requisição."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        except:
+            return JsonResponse({"sucess": False, "message": "erro inesperado ocorreu"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 

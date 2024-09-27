@@ -24,11 +24,11 @@ from .views.login import login_view
 urlpatterns = [
     path('login/', login_view, name='login'),
     path('user/<int:id>/', user_account, name='get_user'),
-    path('user/update/', user_update, name='update_user'),
+    path('user/update/<int:id>/', user_update, name='update_user'),
     path('create/', create_user, name='create_user'),
     path('send-email/', confirmation_code, name='send-confirmation-code'),
     path('verify-confirmation-code/', Verify_confirmation_code, name='verify-confirmation-code'),
-    path('delete/<int:id>', user_delete, name='delete_user'),
+    path('user/delete/<int:id>/', user_delete, name='user_delete'),
     path('user/reset-password/', user_password_update, name='user_password_update'),
     path('user/confirm-reset-password/', verify_reset_token, name='verify_reset_token')
 ]
