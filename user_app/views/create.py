@@ -43,9 +43,10 @@ def create_user(request):
         serializer.is_valid() # valida se os dados estão corretos com o serializer, se estiver errado vai soltar a excessão
         new_user = serializer.save() # salva o usuario no banco de dados
         return JsonResponse({
-            "sucess": True, 
-            "message":"Usuário criado com sucesso"},
+            "success": True, 
+            "message": "Usuário criado com sucesso"},
             status=status.HTTP_201_CREATED) # retorna para o front end os dados salvos, uma mensagem de sucesso e o status
     except:
-        return JsonResponse({"sucess": False,
-                              "message": "Não foi possível realizar a criação da conta"}, status=status.HTTP_400_BAD_REQUEST) # retorna a excessão
+        return JsonResponse({"success": False,
+                              "message": "Não foi possível realizar a criação da conta"}, 
+                              status=status.HTTP_400_BAD_REQUEST) # retorna a excessão

@@ -12,7 +12,10 @@ def login_view(request):
     id_token = request.data.get('id_token')
 
     if not id_token:
-        return Response({"sucess": False, "message":"token id é necessário "}, status=status.HTTP_204_NO_CONTENT)
+        return Response({
+            "success": False, 
+            "message":"token id é necessário "}, 
+            status=status.HTTP_204_NO_CONTENT)
 
     try:
         # Verifica o ID Token com Firebase
@@ -26,13 +29,20 @@ def login_view(request):
         login(request, user)
 
         # Cria um cookie de sessão
-        response = Response({"sucess": True, 'message': 'Usuário autenticado com sucesso'}, status=status.HTTP_200_OK)
-        response.set_cookie('sessionid', request.COOKIES.get('sessionid'), httponly=True)
+        response = Response({
+            "success": True, 
+            'message': 'Usuário autenticado com sucesso'}, 
+            status=status.HTTP_200_OK)
+        response.set_cookie('sessionid', 
+                            request.COOKIES.get('sessionid'), 
+                            httponly=True)
 
         return response
 
     except Exception:
-        return Response({"sucess": False, "message":"um erro inesperado ocorreu"})
+        return Response({
+            "success": False, 
+            "message":"um erro inesperado ocorreu"})
     
 # ------------------ View para deslogar o usuario ---------------------     
 @api_view(['POST'])
@@ -40,13 +50,13 @@ def logout_user(request):
     logout(request)
     try:  # Remove a sessão do usuário
         response = JsonResponse({
-            'sucess': True,
+            'success': True,
             'message': 'User logged out successfully.'}, 
             status=status.HTTP_200_OK)
         response.delete_cookie('sessionid')  # Opcional: remove o cookie de sessão
         return response
     except:
         Response({
-            "sucess": False,
+            "success": False,
             "message":"não foi possivel encontrar nenhuma sessão"}, 
             status=status.HTTP_204_NO_CONTENT)

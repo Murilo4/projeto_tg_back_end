@@ -1,11 +1,10 @@
 from rest_framework import status
 from ..models import User
 from rest_framework.response import Response
-from ..serializers import UserSerializer
+from ..serializers import UserSerializer, UserChangeSerializer
 from django.http import JsonResponse
-from rest_framework.decorators import api_view,  permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -31,11 +30,11 @@ def user_account(request, id):
                 serializer = UserSerializer(user)
                 return JsonResponse({
                     "data": serializer.data, 
-                    "sucess": True, "message":"Usuário encontrado"}, 
+                    "success": True, "message":"Usuário encontrado"}, 
                     status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return JsonResponse({
-                    "sucess": False, 
+                    "success": False, 
                     "message":"Usuário não foi encontrado"}, 
                     status=status.HTTP_404_NOT_FOUND)
             except Exception:
@@ -114,7 +113,7 @@ def user_update(request, id):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Atualiza os dados do usuário
-            serializer = UserSerializer(user, data=request.data, partial=True)  # Salva os dados do usuário
+            serializer = UserChangeSerializer(user, data=request.data, partial=True)  # Salva os dados do usuário
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response({
@@ -125,11 +124,11 @@ def user_update(request, id):
 
         except ValidationError as e:
             return Response({
-                "sucess": False, 
+                "success": False, 
                 "message":{e}}, 
                 status=status.HTTP_400_BAD_REQUEST)
     return JsonResponse({
-        "sucess": False, 
+        "success": False, 
         "message":"Metódo não autorizado"}, 
         status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
@@ -141,13 +140,13 @@ def user_password_update(request):
         user = User.objects.get(email=email)
     except User.DoesNotExist:
         return Response({
-            "sucess": False, 
+            "success": False, 
             "message":"Email não encontrado"}, 
             status=status.HTTP_404_NOT_FOUND)
     # Gerar o token e enviar o email
     send_reset_email(user)
     return Response({
-        "sucess": True, 
+        "success": True, 
         "message":"enviando email"}, 
         status=status.HTTP_200_OK)
 
@@ -177,7 +176,7 @@ def send_reset_email(user):
     email_message.attach_alternative(html_message, "text/html")
     email_message.send()
     return Response({
-        "sucess": True, 
+        "success": True, 
         "message":"email enviado com sucesso"}, 
         status=status.HTTP_200_OK)
 
@@ -190,11 +189,11 @@ def verify_reset_token(request):
     # Verifica se o token é válido
     if is_valid_token(uidb64, token):
         return Response({
-            "sucess": True, 
-            "message":"Token válido"},
+            "success": True, 
+            "message": "Token válido"},
             status=status.HTTP_200_OK)
     return Response({
-        "sucess": False, 
+        "success": False, 
         "message":"Token inválido ou expirado!"}, 
         status=status.HTTP_400_BAD_REQUEST)
 
@@ -208,6 +207,6 @@ def is_valid_token(uidb64, token):
     # Verifica se o token é válido para o usuário
     if(default_token_generator.check_token(user, token)):
         return Response({
-            "sucess": True, 
+            "success": True, 
             "message":"Código verificado com sucesso"}, 
             status=status.HTTP_200_OK) 
