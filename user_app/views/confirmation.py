@@ -1,5 +1,3 @@
-from ast import type_ignore
-from typing import Any
 from rest_framework import status
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
@@ -8,12 +6,11 @@ from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
 from setup.settings import EMAIL_HOST_USER
 from django.core.mail import EmailMultiAlternatives
-from django.http import JsonResponse
 from django.core import exceptions
 import re
 
 
-# ------------------ View para envio de código de confirmação de email ---------------------      
+# View para envio de código de confirmação de email ---------------------
 @csrf_exempt
 @api_view(['POST'])
 def confirmation_code(request) -> JsonResponse:
@@ -42,11 +39,11 @@ def confirmation_code(request) -> JsonResponse:
         Obrigado por se registrar! Agora confirmaremos seu e-mail.</p>
         <p style="font-size:20px; color: #000;">
         Insira o código no campo que foi solicitado:</p>
-        <p style="display: inline-block;background-color: #D3D3D3; 
+        <p style="display: inline-block;background-color: #D3D3D3;
         padding: 10px; border-radius: 5px; font-size: 24px;">
             <strong>{formatted_code}</strong>
         </p>
-        <p style="font-size:20px; color: #000;">Qualquer dúvida, 
+        <p style="font-size:20px; color: #000;">Qualquer dúvida,
         entre em contato conosco.</p>
         """
 

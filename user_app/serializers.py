@@ -6,10 +6,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'user_name', 'nick_name')
-    
+
     def create(self, validated_data):
-        # Hash a senha antes de salvar
-        
         # Cria e retorna o usuário
         user = User(**validated_data)  # Cria um novo objeto User
         user.save()  # Salva no banco de dados
@@ -20,7 +18,7 @@ class UserChangeSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'user_name', 'nick_name', 'phone_number', 'user_img')
 
-        def update(seld, validated_data):
+        def update(self, validated_data):
             user = User(**validated_data)
             user.save()
             return user
