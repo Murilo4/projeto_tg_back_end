@@ -17,18 +17,34 @@ Including another URLconf
 
 from django.urls import path
 from .views.confirmation import confirmation_code, Verify_confirmation_code
-from .views.user_manager import user_account, user_delete, user_update, user_password_update, verify_reset_token
+from .views.confirmation import resend_email_code
+from .views.user_manager import user_account, user_delete, user_update
+from .views.user_manager import user_password_update, verify_reset_token
 from .views.create import create_user
-from .views.login import login_view
+from .views.login import login_view, logout_user
 
 urlpatterns = [
-    path('login/', login_view, name='login'),
-    path('user/<int:id>/', user_account, name='get_user'),
-    path('user/update/<int:id>/', user_update, name='update_user'),
-    path('create/', create_user, name='create_user'),
-    path('send-email/', confirmation_code, name='send-confirmation-code'),
-    path('verify-confirmation-code/', Verify_confirmation_code, name='verify-confirmation-code'),
-    path('user/delete/<int:id>/', user_delete, name='user_delete'),
-    path('user/reset-password/', user_password_update, name='user_password_update'),
-    path('user/confirm-reset-password/', verify_reset_token, name='verify_reset_token')
+     path('login/', login_view,
+          name='login'),
+     path('user/<int:id>/', user_account,
+          name='get_user'),
+     path('user/update/<int:id>/', user_update,
+          name='update_user'),
+     path('create/', create_user,
+          name='create_user'),
+     path('send-email/', confirmation_code,
+          name='send-confirmation-code'),
+     path('verify-confirmation-code/', Verify_confirmation_code,
+          name='verify-confirmation-code'),
+     path('user/delete/<int:id>/', user_delete,
+          name='user_delete'),
+     path('user/reset-password/', user_password_update,
+          name='user_password_update'),
+     path('user/confirm-reset-password/', verify_reset_token,
+          name='verify_reset_token'),
+     path('resend-email/', resend_email_code,
+          name='resend_email_code'),
+     path('logout/', logout_user,
+          name='logout'),
+
 ]

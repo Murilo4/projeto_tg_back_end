@@ -8,27 +8,109 @@ from setup.settings import EMAIL_HOST_USER
 from django.core.mail import EmailMultiAlternatives
 from django.core import exceptions
 import re
+from ..models import User
 
 
 # View para envio de código de confirmação de email ---------------------
 @csrf_exempt
 @api_view(['POST'])
-def confirmation_code(request) -> JsonResponse:
+def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
     try:
-        generate_code = generate_confirmation_code()
-        email = request.data.get('email')
-        name = request.data.get('name')
+        username: str = request.data.get('name')
+        email: str = request.data.get('email')
+        errors = []  # Lista para coletar todos os erros
+        if not username:
+            return JsonResponse({"success": False,
+                                 'message': 'usuario invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return JsonResponse({"success": False,
+                                 'message': 'Email invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate the email address using re
+        # Validação do nome de usuário
+        if User.objects.filter(user_name=username).exists():
+            errors.append(
+                "Usuário já existe")
+        if len(username) < 2:
+            errors.append(
+                "Nome muito pequeno")
+        elif len(username) > 50:
+            errors.append(
+                "Nome muito grande")
+
+        # Validação do email
+
+        if User.objects.filter(email=email).exists():
+            errors.append(
+                "Email já registrado")
+
         pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
         if not re.match(pattern, email):
             return JsonResponse({
                 "success": False,
-                "message": "Email address is not valid"
+                "message": "Email não é válido"
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Se houver erros, retorne a lista de erros
+        if errors:
+            return JsonResponse({
+                "success": False,
+                "message": errors  # Retorna todos os erros encontrados
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user_to_code = {'username': username, 'email': email}
+        if not errors:
+            send_email_code(user_to_code)
+            return JsonResponse({
+                "success": True,
+                "message": "Dados confirmados, enviado email"},
+                status=status.HTTP_200_OK)
+    except exceptions.BadRequest:
+        return JsonResponse({"success": False,
+                            "message":
+                                "Não foi possível realizar a validação"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['post'])
+def resend_email_code(request):
+    try:
+        username = request.data.get('name')
+        email = request.data.get('email')
+        if not username:
+            return JsonResponse({"success": False,
+                                'message': 'usuario invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return JsonResponse({"success": False,
+                                'message': 'Email invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        if username and email:
+            user_to_code = {'username': username, 'email': email}
+            send_email_code(user_to_code)
+            return JsonResponse({"success": True,
+                                "message":
+                                    "Email de confirmação enviado novamente"},
+                                status=status.HTTP_200_OK
+                                )
+
+    except exceptions.BadRequest:
+        return JsonResponse({"success": False,
+                            "message":
+                                "Não foi possível realizar o reenvio"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+def send_email_code(user_to_code):
+    try:
+        email = user_to_code['email']
+        name = user_to_code['username']
+        generate_code = generate_confirmation_code()
+
         verification_data = {'code': generate_code, 'email': email}
-        cache.set(f'confirmation_code_{email}', verification_data, timeout=300)
+        cache.set(f'confirmation_code_{email}', verification_data, timeout=180)
 
         formatted_code = " ".join(generate_code)
         subject = "Flash vibe codigo de confirmação "
@@ -81,6 +163,14 @@ def Verify_confirmation_code(request):
     code = request.data.get('code')
 
     cached_code = cache.get(f'confirmation_code_{email}')
+    if not code:
+        return JsonResponse({"success": False,
+                            'message': 'nenhum codigo identificado'},
+                            status=status.HTTP_400_BAD_REQUEST)
+    if not email:
+        return JsonResponse({"success": False,
+                            'message': 'Email invalido'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     if cached_code is None:
         return JsonResponse({
@@ -94,6 +184,7 @@ def Verify_confirmation_code(request):
             if cached_code and cached_code['code'] == code:
                 # Código correto, marque o e-mail como verificado
                 try:
+                    cache.delete(f'confirmation_code_{email}')
                     return JsonResponse({
                         "success": True,
                         "message": "Email verified successfully."},

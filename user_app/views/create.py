@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from ..models import User
+from django.core import exceptions
 
 # ------------------ View para criação de usuario ---------------------
 
@@ -13,11 +14,18 @@ from ..models import User
 def create_user(request):
     try:
         new_user = request.data  # recebe os dados do front end
-        username = request.data.get('username')
+        username = request.data.get('name')
         email = new_user.get('email')
         nickname = new_user.get('nickname')
         errors = []  # Lista para coletar todos os erros
-
+        if not username:
+            return JsonResponse({"success": False,
+                                 'message': 'usuario invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return JsonResponse({"success": False,
+                                 'message': 'Email invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
         # Validação do nome de usuário
         if User.objects.filter(user_name=username).exists():
             errors.append(
@@ -49,8 +57,9 @@ def create_user(request):
         return JsonResponse({
             "success": True,
             "message": "Usuário criado com sucesso"},
-            status=status.HTTP_201_CREATED) 
-    except:
+            status=status.HTTP_201_CREATED)
+    except exceptions.BadRequest:
         return JsonResponse({"success": False,
-                              "message": "Não foi possível realizar a criação da conta"}, 
-                              status=status.HTTP_400_BAD_REQUEST) # retorna a excessão
+                            "message":
+                                "Não foi possível realizar a criação"},
+                            status=status.HTTP_400_BAD_REQUEST)

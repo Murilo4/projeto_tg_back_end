@@ -12,11 +12,13 @@ class UserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)  # Cria um novo objeto User
         user.save()  # Salva no banco de dados
         return user
-    
+
+
 class UserChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'user_name', 'nick_name', 'phone_number', 'user_img')
+        fields = ('email', 'user_name', 'nick_name', 'phone_number',
+                  'user_img')
 
         def update(self, validated_data):
             user = User(**validated_data)
