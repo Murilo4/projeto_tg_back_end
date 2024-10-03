@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from ..code_and_security.code_generator import generate_confirmation_code
 from ..code_and_security.code_generator import generate_jwt, validate_jwt
-from ..code_and_security.code_generator import generate_jwt_2, blacklist_jwt
+from ..code_and_security.code_generator import generate_jwt_2
 from django.core.cache import cache
 from django.core import exceptions
 from django.views.decorators.csrf import csrf_exempt
@@ -26,11 +26,9 @@ def validate_token_view(request):
         return JsonResponse({"success": False,
                              "message": "Token JWT não encontrado."},
                             status=status.HTTP_401_UNAUTHORIZED)
-    print(token)
     # Remove o prefixo 'Bearer ' se necessário
     if token.startswith('Bearer '):
         token = token[7:]
-    print(token)
     # Valida o token JWT
     jwt_data = validate_jwt(token)
 
@@ -49,12 +47,12 @@ def validate_token_view(request):
 @api_view(['POST'])
 def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
     try:
-        name: str = request.data.get('name')
-        email: str = request.data.get('email')
         nickname: str = request.data.get('nickname')
+        email: str = request.data.get('email')
+        name: str = request.data.get('name')
 
         errors = []  # Lista para coletar todos os erros
-        if not name:
+        if not nickname:
             return JsonResponse({"success": False,
                                  'message': 'usuario invalido'},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -64,15 +62,15 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
                                 status=status.HTTP_400_BAD_REQUEST)
 
         # Validação do nome de usuário
-        if User.objects.filter(user_name=name).exists():
+        if User.objects.filter(nick_name=nickname).exists():
             errors.append(
-                "Usuário já existe")
-        if len(name) < 2:
+                "nickname já existe")
+        if len(nickname) < 2:
             errors.append(
-                "Nome muito pequeno")
-        elif len(name) > 50:
+                "nickname muito pequeno")
+        elif len(nickname) > 50:
             errors.append(
-                "Nome muito grande")
+                "nickname muito grande")
 
         # Validação do email
 
@@ -96,8 +94,8 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
         try:
 
             # Prepara os dados do usuário temporário para o serializer
-            user_temp_format = {'user_name': name,
-                                'nick_name':  nickname,
+            user_temp_format = {'nick_name': nickname,
+                                'user_name':  name,
                                 'email': email}
             user_to_code = {'username': name,
                             'email': email}
@@ -120,44 +118,18 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
                 # Se o serializer não for válido, retorne os erros
             return JsonResponse({
                 "success": False,
-                "message": serializer.errors
+                "message": "usuario temporario já existe"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception as e:  # Captura exceção com informações
+        except exceptions.BadRequest:  # Captura exceção com informações
             return JsonResponse({
                 "success": False,
-                "message": f'Erro ao salvar os dados: {str(e)}'
+                "message": 'Erro ao salvar os dados'
                 }, status=status.HTTP_400_BAD_REQUEST)
     except exceptions.FieldDoesNotExist:
         return JsonResponse({"success": False,
                             "message":
                              "Não foi possível realizar a validação"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['post'])
-def resend_email_code(request):
-    try:
-        email = request.data.get('email')
-        cache.get(f'confirmation_code_{email}')
-        user = TempRegistration.objects.get(email=email)
-
-        user_data = {
-                    "email": user.email,
-                    "user_name": user.user_name,
-                    }
-        if user_data:
-            send_email_code(user_data)
-            return JsonResponse({"success": True,
-                                "message":
-                                 "Email de confirmação enviado novamente"},
-                                status=status.HTTP_200_OK
-                                )
-
-    except exceptions.BadRequest:
-        return JsonResponse({"success": False,
-                            "message":
-                                "Não foi possível realizar o reenvio"},
                             status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -208,13 +180,51 @@ def send_email_code(user_to_code, token=None):
                 "message": "não foi possível enviar o email"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    except Exception as e:
+    except exceptions.BadRequest:
         return JsonResponse({
             "success": False,
-            "message": f"Erro ao enviar email: {str(e)}"
+            "message": "Erro ao enviar email"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # View para validar código inserido pelo usuario na validação de email ------
+
+
+@api_view(['post'])
+def resend_email_code(request):
+    try:
+        email = request.data.get('email')
+
+        cache.get(f'confirmation_code_{email}')
+        user = TempRegistration.objects.get(email=email)
+
+        user_data = {
+                    "email": user.email,
+                    "user_name": user.user_name,
+                    }
+        if user_data:
+            send_email_code(user_data)
+            return JsonResponse({"success": True,
+                                "message":
+                                    "Email de confirmação enviado novamente"},
+                                status=status.HTTP_200_OK
+                                )
+    except exceptions.ObjectDoesNotExist:
+        return JsonResponse(
+            {"success": False,
+                "message": "Não foi possível encontrar o usuário"},
+            status=status.HTTP_404_NOT_FOUND
+            )
+    except exceptions.ValidationError:
+        return JsonResponse(
+            {"success": False, 
+             "message": "Erro ao validar o código de confirmação"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except exceptions.BadRequest:
+        return JsonResponse({"success": False,
+                            "message":
+                                "Não foi possível realizar o reenvio"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -262,7 +272,7 @@ def Verify_confirmation_code(request):
                         "message": "Email verified successfully.",
                         "jwt_token": jwt_token},
                         status=status.HTTP_200_OK)
-                    
+
                 except exceptions.ObjectDoesNotExist:
                     return JsonResponse({
                         "success": False,

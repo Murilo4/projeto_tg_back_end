@@ -50,14 +50,12 @@ def blacklist_jwt(token):
 
 
 def is_token_blacklisted(token):
-    print(token)
     token_hash = hashlib.md5(token.encode()).hexdigest()
     return cache.get(f'blacklisted_token_{token_hash}') is not None
 
 
 def validate_jwt(token):
     if is_token_blacklisted(token):
-        print(token)
         return {"error": "Token já foi revogado."}
     try:
         decoded_data = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
