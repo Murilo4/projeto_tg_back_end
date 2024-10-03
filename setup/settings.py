@@ -29,7 +29,6 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'user_app',
-    'deck_app',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -112,7 +111,7 @@ DATABASES = {
         'PORT': "14319",
         'OPTIONS': {
             'ssl': {
-                'ca': './ca.pem', 
+                'ca': './ca.pem',
             },
         },
     }

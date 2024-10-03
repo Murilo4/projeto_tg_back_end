@@ -75,12 +75,16 @@ def create_user(request):
             }, status=status.HTTP_400_BAD_REQUEST)
         new_user_dict = {'user_name': username, 'email': email,
                          'nick_name': nickname}
+        
+        user_formated = {'username': username, 'email': email,
+                         'nickname': nickname}
         serializer = UserSerializer(data=new_user_dict)
         serializer.is_valid()
         temp_user = serializer.save()  # salva o usuario no banco de dados
         return JsonResponse({
             "success": True,
-            "message": "Usuário criado com sucesso"},
+            "message": "Usuário criado com sucesso",
+            "data": user_formated},
             status=status.HTTP_201_CREATED)
     except exceptions.BadRequest:
         return JsonResponse({"success": False,

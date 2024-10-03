@@ -26,11 +26,11 @@ def validate_token_view(request):
         return JsonResponse({"success": False,
                              "message": "Token JWT não encontrado."},
                             status=status.HTTP_401_UNAUTHORIZED)
-
+    print(token)
     # Remove o prefixo 'Bearer ' se necessário
     if token.startswith('Bearer '):
         token = token[7:]
-
+    print(token)
     # Valida o token JWT
     jwt_data = validate_jwt(token)
 
@@ -198,7 +198,6 @@ def send_email_code(user_to_code, token=None):
 
         if email_message.send():
             # Check if the email was sent successfully
-            blacklist_jwt(token)
             return JsonResponse({
                 "success": True,
                 "message": "email enviado com sucesso"

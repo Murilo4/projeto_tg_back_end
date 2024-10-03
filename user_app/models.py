@@ -22,15 +22,6 @@ class TempRegistration(models.Model):
     user_name = models.CharField(max_length=50, null=False)
     nick_name = models.CharField(max_length=25, null=True)
     created_at = models.DateTimeField(null=True, auto_now_add=True)
-    in_progress = models.BooleanField(default=True)
-
-    def mark_as_completed(self):
-        # Método para marcar o cadastro como completo
-        self.in_progress = False
-        self.save()  # Primeiro, salva a mudança no banco de dados
-
-        # Depois de salvar a mudança, deleta o objeto
-        self.delete()
 
     def __str__(self):
         return self.user_name

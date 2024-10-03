@@ -43,18 +43,21 @@ def blacklist_jwt(token):
         exp_timestamp = decoded_data.get("exp")
         exp_datetime = datetime.fromtimestamp(exp_timestamp, timezone.utc)
         time_to_expire = (exp_datetime - datetime.now(timezone.utc)).total_seconds()
-        # Adiciona o token no cache com o tempo de expiração restante
-        cache.set(f'blacklisted_token_{token}', True, timeout=int(time_to_expire))
+        token_hash = hashlib.md5(token.encode()).hexdigest()
+        cache.set(f'blacklisted_token_{token_hash}', True, timeout=int(time_to_expire))
     except jwt.InvalidTokenError:
         pass
 
 
 def is_token_blacklisted(token):
-    return cache.get(f'blacklisted_token_{token}') is not None
+    print(token)
+    token_hash = hashlib.md5(token.encode()).hexdigest()
+    return cache.get(f'blacklisted_token_{token_hash}') is not None
 
 
 def validate_jwt(token):
     if is_token_blacklisted(token):
+        print(token)
         return {"error": "Token já foi revogado."}
     try:
         decoded_data = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
@@ -74,7 +77,8 @@ def extract_email_from_jwt(token):
         return None  # O token expirou
     except jwt.InvalidTokenError:
         return None  # O token é inválido
-    
+
+
 def generate_jwt_2(user_data):
     payload = {
         'email': user_data['email'],
@@ -85,8 +89,3 @@ def generate_jwt_2(user_data):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     return token
-
-def create_temp_user(data):
-    user = TempRegistration.objects.create(**data)
-    # Agendar a tarefa para deletar o usuário após 10 minutos
-    delete_temp_user.apply_async(args=[user.id], countdown=600)  # 600 segundos = 10 minutos

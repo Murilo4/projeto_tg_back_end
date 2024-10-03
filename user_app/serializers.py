@@ -26,7 +26,7 @@ class UserChangeSerializer(serializers.ModelSerializer):
             user.save()
             return user
         
-
+        
 class TempUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TempRegistration
