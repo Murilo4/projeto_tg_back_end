@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.urls import path
 from .views.confirmation import confirmation_code, Verify_confirmation_code
-from .views.confirmation import resend_email_code
+from .views.confirmation import resend_email_code, validate_token_view
 from .views.user_manager import user_account, user_delete, user_update
 from .views.user_manager import user_password_update, verify_reset_token
 from .views.create import create_user
@@ -30,12 +30,14 @@ urlpatterns = [
           name='get_user'),
      path('user/update/<int:id>/', user_update,
           name='update_user'),
-     path('create/', create_user,
-          name='create_user'),
-     path('send-email/', confirmation_code,
-          name='send-confirmation-code'),
+     path('send-user-data/', confirmation_code,
+          name='send_user_data'),
+     path('validate-token/', validate_token_view,
+          name='validate_token_view'),
      path('verify-confirmation-code/', Verify_confirmation_code,
-          name='verify-confirmation-code'),
+          name='verify_confirmation_code'),
+     path('create/', create_user,
+          name='create'),
      path('user/delete/<int:id>/', user_delete,
           name='user_delete'),
      path('user/reset-password/', user_password_update,
@@ -46,5 +48,4 @@ urlpatterns = [
           name='resend_email_code'),
      path('logout/', logout_user,
           name='logout'),
-
 ]

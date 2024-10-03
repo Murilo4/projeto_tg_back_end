@@ -13,7 +13,7 @@ from django.utils.encoding import force_str
 from django.core.mail import EmailMultiAlternatives
 from setup.settings import EMAIL_HOST_USER
 from django.http import HttpResponseNotFound
-from ..code_generator import make_custom_token
+from ..code_and_security.code_generator import make_custom_token
 from django.views.decorators.csrf import csrf_exempt
 from setup.sessionmiddleware import require_session_id
 

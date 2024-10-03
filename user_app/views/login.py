@@ -6,13 +6,12 @@ from django.contrib.auth import logout
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import exceptions
-from ..code_generator import generate_session_id
+from ..code_and_security.code_generator import generate_session_id
 from django.contrib.auth.models import User
-# from firebase_admin import credentials
-# import firebase_admin
-
-# cred = credentials.Certificate('user_app/firebase.json')
-# firebase_admin.initialize_app(cred)
+from firebase_admin import credentials
+import firebase_admin
+cred = credentials.Certificate('user_app/conections/firebase.json')
+firebase_admin.initialize_app(cred)
 
 
 @api_view(['POST'])
