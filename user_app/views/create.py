@@ -39,8 +39,8 @@ def create_user(request):
                                  "Usuário temporário não encontrado."},
                                 status=status.HTTP_404_NOT_FOUND)
 
-        username = temp_user.user_name
         nickname = temp_user.nick_name
+        username = temp_user.user_name
         errors = []  # Lista para coletar todos os erros
         if not username:
             return JsonResponse({"success": False,

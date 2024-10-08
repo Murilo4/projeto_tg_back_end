@@ -1,3 +1,4 @@
+import time
 from ..models import User
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
@@ -10,6 +11,7 @@ from ..code_and_security.code_generator import generate_session_id
 from django.contrib.auth.models import User
 from firebase_admin import credentials
 import firebase_admin
+from django.core.cache import cache
 cred = credentials.Certificate('user_app/conections/firebase.json')
 firebase_admin.initialize_app(cred)
 
@@ -25,6 +27,7 @@ def login_view(request):
         if user:
             # Gera um cookie de sessão
             session_id = generate_session_id()
+            cache.set(f'user_auth_{session_id}', session_id, timeout=604800)
             response = JsonResponse({'cookie': session_id})
             response.set_cookie('session_id', session_id, max_age=604800)  # 604800 segundos = 7 dias
 
@@ -62,6 +65,30 @@ def authenticate_session(session_id):
     if user:
         return user
     return None
+
+
+@api_view(['POST'])
+def validate_session(request):
+    session_id = request.COOKIES.get('session_id')
+
+    if not session_id:
+        return JsonResponse({'success': False,
+                            'message': 'Nenhum token de sessão encontrado'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+    # Verifica se a sessão está no cache
+    user_id = cache.get(session_id)
+
+    if user_id:
+        # Sessão válida
+        return JsonResponse({'success': True,
+                            'message': 'Sessão válida', 
+                             'user_id': user_id})
+    else:
+        # Sessão inválida ou expirada
+        return JsonResponse({'success': False,
+                            'error': 'Sessão inválida ou expirada'},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
 
 class SessaologoutMiddleware:

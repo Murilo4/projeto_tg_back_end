@@ -104,7 +104,7 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
             serializer = TempUserSerializer(data=user_temp_format)
             if serializer.is_valid():
                 user_temp = serializer.save()  # Salva o usuário temporário
-                cache.set(f'usuario_{email}', user_temp_format, timeout=180)
+                cache.set(f'usuario_{email}', user_temp_format, timeout=300)
                 # Gera o JWT para o usuário
                 jwt_token = generate_jwt(user_temp)
 

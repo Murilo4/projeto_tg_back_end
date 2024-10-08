@@ -21,7 +21,7 @@ from .views.confirmation import resend_email_code, validate_token_view
 from .views.user_manager import user_account, user_delete, user_update
 from .views.user_manager import user_password_update, verify_reset_token
 from .views.create import create_user
-from .views.login import login_view, logout_user
+from .views.login import login_view, logout_user, validate_session
 
 urlpatterns = [
      path('login/', login_view,
@@ -48,4 +48,6 @@ urlpatterns = [
           name='resend_email_code'),
      path('logout/', logout_user,
           name='logout'),
+     path('validate-session/', validate_session,
+          name='validate_session')
 ]

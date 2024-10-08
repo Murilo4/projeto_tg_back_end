@@ -10,7 +10,7 @@ def require_session_id(view_func):
         if token is None or token == "":
             return JsonResponse({
                                 "success": False,
-                                "message": "sessão não encontrada"},
+                                "message": f"sessão não encontrada{token}"},
                                 status=status.HTTP_404_NOT_FOUND)
         # Verificar se o token ainda existe armazenado no cookie
         if 'session_id' not in request.COOKIES or request.COOKIES['session_id'] == "" or request.COOKIES['session_id'] is None:

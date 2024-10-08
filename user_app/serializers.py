@@ -1,4 +1,3 @@
-from tempfile import TemporaryDirectory
 from rest_framework import serializers
 from .models import User, TempRegistration
 
@@ -25,8 +24,8 @@ class UserChangeSerializer(serializers.ModelSerializer):
             user = User(**validated_data)
             user.save()
             return user
-        
-        
+
+
 class TempUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TempRegistration
