@@ -22,12 +22,8 @@ def login_view(request):
     id_token = request.data.get('id_token')
 
     try:
-        decoded_token = auth.verify_id_token(id_token)
-        user_email = decoded_token['email']  # Extrai o e-mail do token
+        if id_token is not None:
 
-        # Valida o usuário pelo e-mail
-        user = User.objects.get(email=user_email)
-        if user:
             # Gera um cookie de sessão
             session_id = generate_session_id()
             cache.set(f'user_auth_{session_id}', session_id, timeout=300)
@@ -35,7 +31,7 @@ def login_view(request):
                                     'message': 'Login realizado com sucesso',
                                      'session_id': session_id})
 
-            response.set_cookie('session_id', session_id, max_age=300)
+            response.set_cookie('session_id', session_id, max_age=300, httponly=True, samesite='None')
 
             return response
     except auth.InvalidIdTokenError:
@@ -50,42 +46,40 @@ def login_view(request):
 
 @api_view(['POST'])
 def logout_user(request):
-    if SessaologoutMiddleware:
+    session_id = request.COOKIES.get('session_id')
+    print(session_id)
+    try:
+        middleware_response = SessaologoutMiddleware(session_id)
+        if isinstance(middleware_response, JsonResponse):
+            return JsonResponse({'sucess': False,
+                                 'message': 'Usuario não está logado'},
+                                status=status.HTTP_400_BAD_REQUEST)
         logout(request)
-        try:  # Remove a sessão do usuário
-            response = JsonResponse({
-                'success': True,
-                'message': 'User logged out successfully.'},
-                status=status.HTTP_200_OK)
-            response.delete_cookie('session_id')
-            return response
-        except exceptions.PermissionDenied:
-            Response({
-                "success": False,
-                "message": "não foi possivel encontrar nenhuma sessão"},
-                status=status.HTTP_204_NO_CONTENT)
-
-
-def authenticate_session(session_id):
-    # Verificar se o cookie de sessão é válido
-    # Retorna o usuário autenticado ou None se não for válido
-    user = User.objects.filter(session_id=session_id).first()
-    if user:
-        return user
-    return None
+        # Remove a sessão do usuário
+        response = JsonResponse({
+            'success': True,
+            'message': 'Usuario deslogado'},
+            status=status.HTTP_200_OK)
+        response.delete_cookie('session_id')
+        return response
+    except exceptions.PermissionDenied:
+        JsonResponse({
+            "success": False,
+            "message": "não foi possivel encontrar nenhuma sessão"},
+            status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST'])
 def validate_session(request):
     session_id = request.COOKIES.get('session_id')
-
+    print(session_id)
     if not session_id:
         return JsonResponse({'success': False,
                             'message': 'Nenhum token de sessão encontrado'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     # Verifica se a sessão está no cache
-    user_id = cache.get(session_id)
+    user_id = cache.get(f'user_auth_{session_id}')
 
     if user_id:
         # Sessão válida
@@ -99,25 +93,12 @@ def validate_session(request):
                             status=status.HTTP_401_UNAUTHORIZED)
 
 
-class SessaologoutMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
+def SessaologoutMiddleware(session_id):
+    print('este é o idtoken', session_id)
 
-    def __call__(self, request):
-        if 'session_id' not in request.COOKIES:
-            return JsonResponse({'success': False,
-                                 'message': 'Acesso negado!'},
-                                status=status.HTTP_401_UNAUTHORIZED)
+    if not session_id:  # Verifica se session_id é None ou uma string vazia
+        return JsonResponse({'success': False, 'message': 'Usuário não está logado!'},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
-        # Verificar se o cookie de sessão é válido
-        session_id = request.COOKIES['session_id']
-        user = authenticate_session(session_id)
-        if user is None:
-            return JsonResponse('Acesso negado!',
-                                status=status.HTTP_401_UNAUTHORIZED)
-
-        # Se o usuário está autenticado, permitir o logout
-        if request.method == 'POST' and request.path == '/logout/':
-            logout_user(request, user)
-
-        return self.get_response(request)
+    # Se chegou aqui, session_id é válido
+    return True  # Você pode retornar True para indicar que o usuário está logado

@@ -15,11 +15,9 @@ from setup.settings import EMAIL_HOST_USER
 from django.http import HttpResponseNotFound
 from ..code_and_security.code_generator import make_custom_token
 from django.views.decorators.csrf import csrf_exempt
-from setup.sessionmiddleware import require_session_id
 
 
 @csrf_exempt
-@require_session_id
 @api_view(['GET'])
 def user_account(request, id):
     if request.method == 'GET':
@@ -44,7 +42,6 @@ def user_account(request, id):
 
 
 @csrf_exempt
-@require_session_id
 @api_view(['DELETE'])
 def user_delete(request, id):
     if request.method == 'DELETE':
@@ -72,7 +69,6 @@ def user_delete(request, id):
 
 
 @csrf_exempt
-@require_session_id
 @api_view(['PUT'])
 def user_update(request, id):
     if request.method == 'PUT':
@@ -81,21 +77,11 @@ def user_update(request, id):
             errors = []  # Lista para coletar todos os erros
 
             email = request.data.get('email')
-            username = request.data.get('user_name')
-            if username == user.user_name:
-                errors.append(
-                    "Este é o mesmo nome de usuario já registrado em sua conta"
-                )
+            nickname = request.data.get('nickname')
 
-            if User.objects.filter(user_name=username).exclude(pk=id).exists():
+            if User.objects.filter(nick_name=nickname).exclude(pk=id).exists():
                 errors.append(
                     "Usuário com este nome já existe")
-            if len(username) < 2:
-                errors.append(
-                    "Nome muito pequeno")
-            elif len(username) > 50:
-                errors.append(
-                    "Nome muito grande")
             if email == user.email:
                 errors.append(
                     "Este é o mesmo email que já registrado em sua conta")
@@ -133,7 +119,6 @@ def user_update(request, id):
 
 
 @csrf_exempt
-@require_session_id
 @api_view(['POST'])
 def user_password_update(request):
     email = request.data.get('email')
@@ -188,7 +173,6 @@ def send_reset_email(user):
 
 
 @csrf_exempt
-@require_session_id
 @api_view(['POST'])
 def verify_reset_token(request):
     uidb64 = request.data.get('uid')
