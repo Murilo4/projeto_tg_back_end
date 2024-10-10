@@ -19,26 +19,33 @@ firebase_admin.initialize_app(cred)
 @csrf_exempt
 @api_view(['POST'])
 def login_view(request):
-    id_token = request.POST.get('id_token')
+    id_token = request.data.get('id_token')
 
     try:
         decoded_token = auth.verify_id_token(id_token)
-        email = decoded_token['email']
-        user = User.objects.get(email=email)
+        user_email = decoded_token['email']  # Extrai o e-mail do token
+
+        # Valida o usuário pelo e-mail
+        user = User.objects.get(email=user_email)
         if user:
             # Gera um cookie de sessão
             session_id = generate_session_id()
-            cache.set(f'user_auth_{session_id}', session_id, timeout=604800)
-            response = JsonResponse({'cookie': session_id})
-            response.set_cookie('session_id', session_id, max_age=604800)
+            cache.set(f'user_auth_{session_id}', session_id, timeout=300)
+            response = JsonResponse({'success': True,
+                                    'message': 'Login realizado com sucesso',
+                                     'session_id': session_id})
+
+            response.set_cookie('session_id', session_id, max_age=300)
 
             return response
     except auth.InvalidIdTokenError:
-        return JsonResponse({'error': 'Token inválido'}, status=401)
+        return JsonResponse({'success': False,
+                            'message': 'Token inválido'},
+                            status=status.HTTP_404_NOT_FOUND)
     except User.DoesNotExist:
-        return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
-    # except:
-    #     return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
+        return JsonResponse({'success':  False,
+                            'message': 'Usuário não encontrado'},
+                            status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -50,7 +57,7 @@ def logout_user(request):
                 'success': True,
                 'message': 'User logged out successfully.'},
                 status=status.HTTP_200_OK)
-            response.delete_cookie('sessionid')
+            response.delete_cookie('session_id')
             return response
         except exceptions.PermissionDenied:
             Response({
@@ -83,7 +90,7 @@ def validate_session(request):
     if user_id:
         # Sessão válida
         return JsonResponse({'success': True,
-                            'message': 'Sessão válida', 
+                            'message': 'Sessão válida',
                              'user_id': user_id})
     else:
         # Sessão inválida ou expirada

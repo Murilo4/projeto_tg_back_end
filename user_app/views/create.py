@@ -54,12 +54,6 @@ def create_user(request):
         if User.objects.filter(nick_name=nickname).exists():
             errors.append(
                 "nickname já existe")
-        if len(nickname) < 2:
-            errors.append(
-                "nickname muito pequeno")
-        elif len(nickname) > 50:
-            errors.append(
-                "nickname muito grande")
 
         # Validação do email
 
@@ -73,18 +67,23 @@ def create_user(request):
                 "success": False,
                 "message": errors  # Retorna todos os erros encontrados
             }, status=status.HTTP_400_BAD_REQUEST)
+
         new_user_dict = {'user_name': username, 'email': email,
                          'nick_name': nickname}
+
         serializer = UserSerializer(data=new_user_dict)
         serializer.is_valid()
         temp_user = serializer.save()  # salva o usuario no banco de dados
+
         return JsonResponse({
             "success": True,
             "message": "Usuário criado com sucesso",
-            "data": email},
+            "email": email},
             status=status.HTTP_201_CREATED)
+    
     except exceptions.BadRequest:
         return JsonResponse({"success": False,
                             "message":
                                 "Não foi possível realizar a criação"},
                             status=status.HTTP_400_BAD_REQUEST)
+
