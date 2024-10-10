@@ -1,4 +1,3 @@
-import time
 from ..models import User
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
@@ -8,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core import exceptions
 from ..code_and_security.code_generator import generate_session_id
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from firebase_admin import credentials
 import firebase_admin
@@ -16,20 +16,21 @@ cred = credentials.Certificate('user_app/conections/firebase.json')
 firebase_admin.initialize_app(cred)
 
 
+@csrf_exempt
 @api_view(['POST'])
 def login_view(request):
     id_token = request.POST.get('id_token')
 
     try:
         decoded_token = auth.verify_id_token(id_token)
-        user_id = decoded_token['uid']
-        user = User.objects.get(id=user_id)
+        email = decoded_token['email']
+        user = User.objects.get(email=email)
         if user:
             # Gera um cookie de sessão
             session_id = generate_session_id()
             cache.set(f'user_auth_{session_id}', session_id, timeout=604800)
             response = JsonResponse({'cookie': session_id})
-            response.set_cookie('session_id', session_id, max_age=604800)  # 604800 segundos = 7 dias
+            response.set_cookie('session_id', session_id, max_age=604800)
 
             return response
     except auth.InvalidIdTokenError:

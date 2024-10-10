@@ -1,10 +1,10 @@
 # from django.db import models
 # from django.contrib.auth.hashers import check_password
-
 from django.db import models
 
 
 class User(models.Model):
+    id = models.AutoField(primary_key=True, editable=False)
     email = models.CharField(unique=True, max_length=100)
     user_name = models.CharField(max_length=50, null=False)
     nick_name = models.CharField(max_length=25, null=True)

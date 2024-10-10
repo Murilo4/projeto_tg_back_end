@@ -45,7 +45,7 @@ def validate_token_view(request):
 
 @csrf_exempt
 @api_view(['POST'])
-def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
+def confirmation_code(request):
     try:
         nickname: str = request.data.get('nickname')
         email: str = request.data.get('email')
@@ -53,24 +53,14 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
 
         errors = []  # Lista para coletar todos os erros
         if not nickname:
-            return JsonResponse({"success": False,
-                                 'message': 'usuario invalido'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            errors.append("Usuário inválido")
         if not email:
-            return JsonResponse({"success": False,
-                                 'message': 'Email invalido'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            errors.append("Email inválido")
 
         # Validação do nome de usuário
         if User.objects.filter(nick_name=nickname).exists():
             errors.append(
                 "nickname já existe")
-        if len(nickname) < 2:
-            errors.append(
-                "nickname muito pequeno")
-        elif len(nickname) > 50:
-            errors.append(
-                "nickname muito grande")
 
         # Validação do email
 
@@ -114,7 +104,6 @@ def confirmation_code(request) -> dict[str, str] | JsonResponse | None:
                     "message": "Dados confirmados, email enviado.",
                     "jwt_token": jwt_token
                 }, status=status.HTTP_200_OK)
-
                 # Se o serializer não for válido, retorne os erros
             return JsonResponse({
                 "success": False,
@@ -195,11 +184,12 @@ def resend_email_code(request):
         email = request.data.get('email')
 
         cache.get(f'confirmation_code_{email}')
+        
         user = TempRegistration.objects.get(email=email)
-
+        print(user)
         user_data = {
                     "email": user.email,
-                    "user_name": user.user_name,
+                    "username": user.user_name,
                     }
         if user_data:
             send_email_code(user_data)
@@ -216,7 +206,7 @@ def resend_email_code(request):
             )
     except exceptions.ValidationError:
         return JsonResponse(
-            {"success": False, 
+            {"success": False,
              "message": "Erro ao validar o código de confirmação"},
             status=status.HTTP_400_BAD_REQUEST
         )

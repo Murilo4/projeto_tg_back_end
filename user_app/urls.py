@@ -22,6 +22,7 @@ from .views.user_manager import user_account, user_delete, user_update
 from .views.user_manager import user_password_update, verify_reset_token
 from .views.create import create_user
 from .views.login import login_view, logout_user, validate_session
+from .views.to_deck import get_user_to_deck
 
 urlpatterns = [
      path('login/', login_view,
@@ -49,5 +50,8 @@ urlpatterns = [
      path('logout/', logout_user,
           name='logout'),
      path('validate-session/', validate_session,
-          name='validate_session')
+          name='validate_session'),
+     path('get-user-to-deck/<int:id>',
+          get_user_to_deck,
+          name='get-user-to-deck')
 ]
