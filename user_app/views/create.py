@@ -13,77 +13,81 @@ from ..code_and_security.code_generator import validate_jwt
 @csrf_exempt
 @api_view(['POST'])
 def create_user(request):
-    try:
-        token = request.headers.get('Authorization')
-        if not token:
-            return JsonResponse({"success": False,
-                                 "message": "Token não encontrado."},
-                                status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == "POST":
+        try:
+            token = request.headers.get('Authorization')
+            if not token:
+                return JsonResponse({"success": False,
+                                    "message": "Token não encontrado."},
+                                    status=status.HTTP_401_UNAUTHORIZED)
 
-        if token.startswith("Bearer "):
-            token = token[7:]
+            if token.startswith("Bearer "):
+                token = token[7:]
 
-        jwt_data = validate_jwt(token)
+            jwt_data = validate_jwt(token)
 
-        if 'error' in jwt_data:
-            return JsonResponse({"success": False,
-                                 "message": jwt_data['error']},
-                                status=status.HTTP_401_UNAUTHORIZED)
+            if 'error' in jwt_data:
+                return JsonResponse({"success": False,
+                                    "message": jwt_data['error']},
+                                    status=status.HTTP_401_UNAUTHORIZED)
 
-        email = jwt_data.get('email')
-        temp_user = TempRegistration.objects.filter(email=email).first()
+            email = jwt_data.get('email')
+            temp_user = TempRegistration.objects.filter(email=email).first()
 
-        if not temp_user:
-            return JsonResponse({"success": False,
-                                 "message":
-                                 "Usuário temporário não encontrado."},
-                                status=status.HTTP_404_NOT_FOUND)
+            if not temp_user:
+                return JsonResponse({"success": False,
+                                    "message":
+                                     "Usuário temporário não encontrado."},
+                                    status=status.HTTP_404_NOT_FOUND)
 
-        nickname = temp_user.nick_name
-        username = temp_user.user_name
-        errors = []  # Lista para coletar todos os erros
-        if not username:
-            return JsonResponse({"success": False,
-                                 'message': 'usuario invalido'},
-                                status=status.HTTP_400_BAD_REQUEST)
-        if not email:
-            return JsonResponse({"success": False,
-                                 'message': 'Email invalido'},
-                                status=status.HTTP_400_BAD_REQUEST)
-        # Validação do nome de usuário
-        if User.objects.filter(nick_name=nickname).exists():
-            errors.append(
-                "nickname já existe")
+            nickname = temp_user.nick_name
+            username = temp_user.user_name
+            errors = []  # Lista para coletar todos os erros
+            if not username:
+                return JsonResponse({"success": False,
+                                    'message': 'usuario invalido'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            if not email:
+                return JsonResponse({"success": False,
+                                    'message': 'Email invalido'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            # Validação do nome de usuário
+            if User.objects.filter(nick_name=nickname).exists():
+                errors.append(
+                    "nickname já existe")
 
-        # Validação do email
+            # Validação do email
 
-        if User.objects.filter(email=email).exists():
-            errors.append(
-                "Email já registrado")
+            if User.objects.filter(email=email).exists():
+                errors.append(
+                    "Email já registrado")
 
-        # Se houver erros, retorne a lista de erros
-        if errors:
+            # Se houver erros, retorne a lista de erros
+            if errors:
+                return JsonResponse({
+                    "success": False,
+                    "message": errors  # Retorna todos os erros encontrados
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            new_user_dict = {'user_name': username, 'email': email,
+                             'nick_name': nickname}
+
+            serializer = UserSerializer(data=new_user_dict)
+            serializer.is_valid()
+            temp_user = serializer.save()  # salva o usuario no banco de dados
+
             return JsonResponse({
-                "success": False,
-                "message": errors  # Retorna todos os erros encontrados
-            }, status=status.HTTP_400_BAD_REQUEST)
+                "success": True,
+                "message": "Usuário criado com sucesso",
+                "email": email},
+                status=status.HTTP_201_CREATED)
 
-        new_user_dict = {'user_name': username, 'email': email,
-                         'nick_name': nickname}
-
-        serializer = UserSerializer(data=new_user_dict)
-        serializer.is_valid()
-        temp_user = serializer.save()  # salva o usuario no banco de dados
-
-        return JsonResponse({
-            "success": True,
-            "message": "Usuário criado com sucesso",
-            "email": email},
-            status=status.HTTP_201_CREATED)
-    
-    except exceptions.BadRequest:
+        except exceptions.BadRequest:
+            return JsonResponse({"success": False,
+                                "message":
+                                    "Não foi possível realizar a criação"},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
         return JsonResponse({"success": False,
-                            "message":
-                                "Não foi possível realizar a criação"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
+                             "message": "Metodo não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)

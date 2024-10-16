@@ -3,12 +3,11 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from firebase_admin import auth
 from django.contrib.auth import logout
-from rest_framework.response import Response
 from rest_framework import status
 from django.core import exceptions
 from ..code_and_security.code_generator import generate_session_id
+from ..code_and_security.code_generator import generate_jwt_session
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
 from firebase_admin import credentials
 import firebase_admin
 from django.core.cache import cache
@@ -19,54 +18,76 @@ firebase_admin.initialize_app(cred)
 @csrf_exempt
 @api_view(['POST'])
 def login_view(request):
-    id_token = request.data.get('id_token')
+    if request.method == "POST":
+        id_token = request.POST.get('id_token')
+        email = request.data.get('email')
+        try:
+            # Verifica e decodifica o token do Firebase
+            decoded_token = auth.verify_id_token(id_token)
+            if decoded_token:
+                # Extrai o e-mail diretamente do token
+                user = User.objects.get(email=email)
 
-    try:
-        if id_token is not None:
+                jwt_token = generate_jwt_session(user)
+                # Gera um cookie de sessão
+                session_id = generate_session_id()
+                cache.set(f'user_auth_{session_id}', email, timeout=604800)
 
-            # Gera um cookie de sessão
-            session_id = generate_session_id()
-            cache.set(f'user_auth_{session_id}', session_id, timeout=300)
-            response = JsonResponse({'success': True,
-                                    'message': 'Login realizado com sucesso',
-                                     'session_id': session_id})
+                response = JsonResponse({'success': True,
+                                        'message':
+                                         'Login realizado com sucesso',
+                                         'cookie': session_id,
+                                         'jwt_token': jwt_token,
+                                         'email': email})
+                response.set_cookie('session_id', session_id, max_age=604800)
+                return response
+            else:
+                return JsonResponse({"success": False,
+                                     "message":
+                                     "Não foi possivel validar a sessão"},
+                                    status=status.HTTP_401_UNAUTHORIZED)
 
-            response.set_cookie('session_id', session_id, max_age=300, httponly=True, samesite='None')
-
-            return response
-    except auth.InvalidIdTokenError:
-        return JsonResponse({'success': False,
-                            'message': 'Token inválido'},
-                            status=status.HTTP_404_NOT_FOUND)
-    except User.DoesNotExist:
-        return JsonResponse({'success':  False,
-                            'message': 'Usuário não encontrado'},
-                            status=status.HTTP_404_NOT_FOUND)
+        except auth.InvalidIdTokenError:
+            return JsonResponse({'success': False,
+                                'message': 'Token inválido'},
+                                status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False,
+                                'message': 'Usuario não localizado'},
+                                status=status.HTTP_404_NOT_FOUND)
+    else:
+        return JsonResponse({"success": False,
+                             "message":  "Método não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST'])
 def logout_user(request):
-    session_id = request.COOKIES.get('session_id')
-    print(session_id)
-    try:
-        middleware_response = SessaologoutMiddleware(session_id)
-        if isinstance(middleware_response, JsonResponse):
-            return JsonResponse({'sucess': False,
-                                 'message': 'Usuario não está logado'},
-                                status=status.HTTP_400_BAD_REQUEST)
-        logout(request)
-        # Remove a sessão do usuário
-        response = JsonResponse({
-            'success': True,
-            'message': 'Usuario deslogado'},
-            status=status.HTTP_200_OK)
-        response.delete_cookie('session_id')
-        return response
-    except exceptions.PermissionDenied:
-        JsonResponse({
-            "success": False,
-            "message": "não foi possivel encontrar nenhuma sessão"},
-            status=status.HTTP_204_NO_CONTENT)
+    if request.method == 'POST':
+        session_id = request.COOKIES.get('session_id')
+        try:
+            middleware_response = SessaologoutMiddleware(session_id)
+            if isinstance(middleware_response, JsonResponse):
+                return JsonResponse({'sucess': False,
+                                    'message': 'Usuario não está logado'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            logout(request)
+            # Remove a sessão do usuário
+            response = JsonResponse({
+                'success': True,
+                'message': 'Usuario deslogado'},
+                status=status.HTTP_200_OK)
+            response.delete_cookie('session_id')
+            return response
+        except exceptions.PermissionDenied:
+            JsonResponse({
+                "success": False,
+                "message": "não foi possivel encontrar nenhuma sessão"},
+                status=status.HTTP_204_NO_CONTENT)
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Metodo não autorizado?"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST'])
@@ -94,11 +115,9 @@ def validate_session(request):
 
 
 def SessaologoutMiddleware(session_id):
-    print('este é o idtoken', session_id)
-
     if not session_id:  # Verifica se session_id é None ou uma string vazia
-        return JsonResponse({'success': False, 'message': 'Usuário não está logado!'},
+        return JsonResponse({'success': False,
+                             'message': 'Usuário não está logado!'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
-    # Se chegou aqui, session_id é válido
-    return True  # Você pode retornar True para indicar que o usuário está logado
+    return True

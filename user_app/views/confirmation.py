@@ -20,106 +20,123 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 @api_view(['POST'])
 def validate_token_view(request):
-    token = request.headers.get('Authorization')  # Obtém o token do cabeçalho
+    if request.method == "POST":
+        try:
+            token = request.headers.get('Authorization')
+            # Obtém o token do cabeçalho
+            if not token:
+                return JsonResponse({"success": False,
+                                    "message": "Token JWT não encontrado."},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+            # Remove o prefixo 'Bearer ' se necessário
+            if token.startswith('Bearer '):
+                token = token[7:]
+            # Valida o token JWT
+            jwt_data = validate_jwt(token)
 
-    if not token:
+            if "error" in jwt_data:
+                return JsonResponse({"success": False,
+                                    "message": jwt_data["error"]},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+
+            # Se o token for válido
+            return JsonResponse({"success": True,
+                                "message": "Token válido."},
+                                status=status.HTTP_200_OK)
+        except exceptions.ValidationError:
+            return JsonResponse({"success": False,
+                                 "message":  "Token JWT inválido."},
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+    else:
         return JsonResponse({"success": False,
-                             "message": "Token JWT não encontrado."},
-                            status=status.HTTP_401_UNAUTHORIZED)
-    # Remove o prefixo 'Bearer ' se necessário
-    if token.startswith('Bearer '):
-        token = token[7:]
-    # Valida o token JWT
-    jwt_data = validate_jwt(token)
-
-    if "error" in jwt_data:
-        return JsonResponse({"success": False,
-                             "message": jwt_data["error"]},
-                            status=status.HTTP_401_UNAUTHORIZED)
-
-    # Se o token for válido
-    return JsonResponse({"success": True,
-                         "message": "Token válido."},
-                        status=status.HTTP_200_OK)
+                             "message": "Método não permitido."},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @csrf_exempt
 @api_view(['POST'])
 def confirmation_code(request):
-    try:
-        nickname: str = request.data.get('nickname')
-        email: str = request.data.get('email')
-        name: str = request.data.get('name')
-
-        errors = []  # Lista para coletar todos os erros
-        if not nickname:
-            errors.append("Usuário inválido")
-        if not email:
-            errors.append("Email inválido")
-
-        # Validação do nome de usuário
-        if User.objects.filter(nick_name=nickname).exists():
-            errors.append(
-                "nickname já existe")
-
-        # Validação do email
-
-        if User.objects.filter(email=email).exists():
-            errors.append(
-                "Email já registrado")
-
-        pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-        if not re.match(pattern, email):
-            return JsonResponse({
-                "success": False,
-                "message": "Email não é válido"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Se houver erros, retorne a lista de erros
-        if errors:
-            return JsonResponse({
-                "success": False,
-                "message": errors  # Retorna todos os erros encontrados
-            }, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == "POST":
         try:
+            nickname: str = request.data.get('nickname')
+            email: str = request.data.get('email')
+            name: str = request.data.get('name')
 
-            # Prepara os dados do usuário temporário para o serializer
-            user_temp_format = {'nick_name': nickname,
-                                'user_name':  name,
-                                'email': email}
-            user_to_code = {'username': name,
-                            'email': email}
+            errors = []  # Lista para coletar todos os erros
+            if not nickname:
+                errors.append("Usuário inválido")
+            if not email:
+                errors.append("Email inválido")
 
-            # Usar o serializer para validar e criar o registro temporário
-            serializer = TempUserSerializer(data=user_temp_format)
-            if serializer.is_valid():
-                user_temp = serializer.save()  # Salva o usuário temporário
-                cache.set(f'usuario_{email}', user_temp_format, timeout=300)
-                # Gera o JWT para o usuário
-                jwt_token = generate_jwt(user_temp)
+            # Validação do nome de usuário
+            if User.objects.filter(nick_name=nickname).exists():
+                errors.append(
+                    "nickname já existe")
 
-                send_email_code(user_to_code, jwt_token)
+            # Validação do email
+
+            if User.objects.filter(email=email).exists():
+                errors.append(
+                    "Email já registrado")
+
+            pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            if not re.match(pattern, email):
                 return JsonResponse({
-                    "success": True,
-                    "message": "Dados confirmados, email enviado.",
-                    "jwt_token": jwt_token
-                }, status=status.HTTP_200_OK)
-                # Se o serializer não for válido, retorne os erros
-            return JsonResponse({
-                "success": False,
-                "message": "usuario temporario já existe"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        except exceptions.BadRequest:  # Captura exceção com informações
-            return JsonResponse({
-                "success": False,
-                "message": 'Erro ao salvar os dados'
+                    "success": False,
+                    "message": "Email não é válido"
                 }, status=status.HTTP_400_BAD_REQUEST)
-    except exceptions.FieldDoesNotExist:
+
+            # Se houver erros, retorne a lista de erros
+            if errors:
+                return JsonResponse({
+                    "success": False,
+                    "message": errors  # Retorna todos os erros encontrados
+                }, status=status.HTTP_400_BAD_REQUEST)
+            try:
+
+                # Prepara os dados do usuário temporário para o serializer
+                user_temp_format = {'nick_name': nickname,
+                                    'user_name':  name,
+                                    'email': email}
+                user_to_code = {'username': name,
+                                'email': email}
+
+                # Usar o serializer para validar e criar o registro temporário
+                serializer = TempUserSerializer(data=user_temp_format)
+                if serializer.is_valid():
+                    user_temp = serializer.save()  # Salva o usuário temporário
+                    cache.set(f'usuario_{email}', user_temp_format,
+                              timeout=300)
+                    # Gera o JWT para o usuário
+                    jwt_token = generate_jwt(user_temp)
+
+                    send_email_code(user_to_code, jwt_token)
+                    return JsonResponse({
+                        "success": True,
+                        "message": "Dados confirmados, email enviado.",
+                        "jwt_token": jwt_token
+                    }, status=status.HTTP_200_OK)
+                    # Se o serializer não for válido, retorne os erros
+                return JsonResponse({
+                    "success": False,
+                    "message": "usuario temporario já existe"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            except exceptions.BadRequest:  # Captura exceção com informações
+                return JsonResponse({
+                    "success": False,
+                    "message": 'Erro ao salvar os dados'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+        except exceptions.FieldDoesNotExist:
+            return JsonResponse({"success": False,
+                                "message":
+                                 "Não foi possível realizar a validação"},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
         return JsonResponse({"success": False,
-                            "message":
-                             "Não foi possível realizar a validação"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                             "message": "Metodo não autorizado"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def send_email_code(user_to_code, token=None):
@@ -180,108 +197,118 @@ def send_email_code(user_to_code, token=None):
 
 @api_view(['post'])
 def resend_email_code(request):
-    try:
-        email = request.data.get('email')
+    if request.method == 'POST':
+        try:
+            email = request.data.get('email')
 
-        cache.get(f'confirmation_code_{email}')
-        
-        user = TempRegistration.objects.get(email=email)
-        print(user)
-        user_data = {
-                    "email": user.email,
-                    "username": user.user_name,
-                    }
-        if user_data:
-            send_email_code(user_data)
-            return JsonResponse({"success": True,
-                                "message":
-                                    "Email de confirmação enviado novamente"},
-                                status=status.HTTP_200_OK
-                                )
-    except exceptions.ObjectDoesNotExist:
-        return JsonResponse(
-            {"success": False,
-                "message": "Não foi possível encontrar o usuário"},
-            status=status.HTTP_404_NOT_FOUND
+            cache.get(f'confirmation_code_{email}')
+
+            user = TempRegistration.objects.get(email=email)
+            user_data = {
+                        "email": user.email,
+                        "username": user.user_name,
+                        }
+            if user_data:
+                send_email_code(user_data)
+                return JsonResponse({"success": True,
+                                    "message":
+                                     "Email de confirmação enviado novamente"},
+                                    status=status.HTTP_200_OK
+                                    )
+        except exceptions.ObjectDoesNotExist:
+            return JsonResponse(
+                {"success": False,
+                    "message": "Não foi possível encontrar o usuário"},
+                status=status.HTTP_404_NOT_FOUND
+                )
+        except exceptions.ValidationError:
+            return JsonResponse(
+                {"success": False,
+                 "message": "Erro ao validar o código de confirmação"},
+                status=status.HTTP_400_BAD_REQUEST
             )
-    except exceptions.ValidationError:
-        return JsonResponse(
-            {"success": False,
-             "message": "Erro ao validar o código de confirmação"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except exceptions.BadRequest:
+        except exceptions.BadRequest:
+            return JsonResponse({"success": False,
+                                "message":
+                                    "Não foi possível realizar o reenvio"},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
         return JsonResponse({"success": False,
-                            "message":
-                                "Não foi possível realizar o reenvio"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                             "message":  "Método não suportado"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST'])
 def Verify_confirmation_code(request):
-    email = request.data.get('email')
-    code = request.data.get('code')
+    if request.method == 'POST':
+        email = request.data.get('email')
+        code = request.data.get('code')
 
-    cached_code = cache.get(f'confirmation_code_{email}')
-    if not code:
-        return JsonResponse({"success": False,
-                            'message': 'nenhum codigo identificado'},
-                            status=status.HTTP_400_BAD_REQUEST)
-    if not email:
-        return JsonResponse({"success": False,
-                            'message': 'Email invalido'},
-                            status=status.HTTP_400_BAD_REQUEST)
-    try:
-        user = TempRegistration.objects.get(email=email)
-    except TempRegistration.DoesNotExist:
-        return JsonResponse({"success": False,
-                             "message": "Usuário temporário não encontrado."},
+        cached_code = cache.get(f'confirmation_code_{email}')
+        if not code:
+            return JsonResponse({"success": False,
+                                'message': 'nenhum codigo identificado'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return JsonResponse({"success": False,
+                                'message': 'Email invalido'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = TempRegistration.objects.get(email=email)
+        except TempRegistration.DoesNotExist:
+            return JsonResponse({"success": False,
+                                "message":
+                                 "Usuário temporário não encontrado."},
+                                status=status.HTTP_404_NOT_FOUND)
+
+        if cached_code is None:
+            return JsonResponse({
+                'success': False,
+                "message":
+                "Nenhum código de confirmação encontrado para este email"},
+                status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Verificar o código no cache
+            if cached_code and cached_code['email'] == email:
+                if cached_code and cached_code['code'] == code:
+                    # Código correto, marque o e-mail como verificado
+                    try:
+                        cache.delete(f'confirmation_code_{email}')
+                        user_data = {
+                            "email": user.email,
+                            "user_name": user.user_name,
+                            "nick_name": user.nick_name
+                        }
+                        jwt_token = generate_jwt_2(user_data)
+                        return JsonResponse({
+                            "success": True,
+                            "message": "Email verified successfully.",
+                            "jwt_token": jwt_token},
+                            status=status.HTTP_200_OK)
+
+                    except exceptions.ObjectDoesNotExist:
+                        return JsonResponse({
+                            "success": False,
+                            "message": "Usuário não encontrado."},
                             status=status.HTTP_404_NOT_FOUND)
-
-    if cached_code is None:
-        return JsonResponse({
-            'success': False,
-            "message":
-            "Nenhum código de confirmação encontrado para este email"},
-            status=status.HTTP_400_BAD_REQUEST)
-    try:
-        # Verificar o código no cache
-        if cached_code and cached_code['email'] == email:
-            if cached_code and cached_code['code'] == code:
-                # Código correto, marque o e-mail como verificado
-                try:
-                    cache.delete(f'confirmation_code_{email}')
-                    user_data = {
-                        "email": user.email,
-                        "user_name": user.user_name,
-                        "nick_name": user.nick_name
-                    }
-                    jwt_token = generate_jwt_2(user_data)
-                    return JsonResponse({
-                        "success": True,
-                        "message": "Email verified successfully.",
-                        "jwt_token": jwt_token},
-                        status=status.HTTP_200_OK)
-
-                except exceptions.ObjectDoesNotExist:
+                else:
                     return JsonResponse({
                         "success": False,
-                        "message": "Usuário não encontrado."},
+                        "message": "Código invalido ou expirado."},
                         status=status.HTTP_404_NOT_FOUND)
             else:
                 return JsonResponse({
                     "success": False,
-                    "message": "Código invalido ou expirado."},
-                    status=status.HTTP_404_NOT_FOUND)
-        else:
+                    "message":
+                    "Email ou código invalido para essa requisição."},
+                    status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        except exceptions.ViewDoesNotExist:
             return JsonResponse({
                 "success": False,
-                "message":
-                "Email ou código invalido para essa requisição."},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    except exceptions.ViewDoesNotExist:
-        return JsonResponse({
-            "success": False,
-            "message": "erro inesperado ocorreu"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                "message": "erro inesperado ocorreu"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse({"success": False,
+                             "message":  "Método não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)

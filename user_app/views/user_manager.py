@@ -13,16 +13,29 @@ from django.utils.encoding import force_str
 from django.core.mail import EmailMultiAlternatives
 from setup.settings import EMAIL_HOST_USER
 from django.http import HttpResponseNotFound
-from ..code_and_security.code_generator import make_custom_token
+import requests
+from ..code_and_security.code_generator import make_custom_token, validate_jwt
 from django.views.decorators.csrf import csrf_exempt
 
 
 @csrf_exempt
 @api_view(['GET'])
-def user_account(request, id):
+def user_account(request):
     if request.method == 'GET':
         try:
-            user = User.objects.get(pk=id)  # Usa o id recebido na URL
+            response = requests.post(
+                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+            if response.status_code == 404:
+                raise ValidationError('Não foi possivel validar o token.')
+
+            token = request.headers.get('Authorization')
+            if token.startswith("Bearer "):
+                token = token[7:]
+
+            jwt_data = validate_jwt(token)
+
+            user_id = jwt_data.get('id')
+            user = User.objects.get(pk=user_id)
             serializer = UserSerializer(user)
             return JsonResponse({
                 "data": serializer.data,
@@ -39,14 +52,30 @@ def user_account(request, id):
                 "sucess": False,
                 "message": "Não foi possível validar o usuário"},
                 status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Metodo não autorizado"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @csrf_exempt
 @api_view(['DELETE'])
-def user_delete(request, id):
+def user_delete(request):
     if request.method == 'DELETE':
         try:
-            user = User.objects.get(id=id)
+            response = requests.post(
+                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+            if response.status_code == 404:
+                raise ValidationError('Não foi possivel validar o token.')
+
+            token = request.headers.get('Authorization')
+            if token.startswith("Bearer "):
+                token = token[7:]
+
+            jwt_data = validate_jwt(token)
+
+            user_id = jwt_data.get('id')
+            user = User.objects.get(id=user_id)
             user.delete()
             return JsonResponse({
                 "success": True,
@@ -70,22 +99,34 @@ def user_delete(request, id):
 
 @csrf_exempt
 @api_view(['PUT'])
-def user_update(request, id):
+def user_update(request):
     if request.method == 'PUT':
         try:
-            user = User.objects.get(pk=id)  # Recebe o id do usuário
+            response = requests.post(
+                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+            if response.status_code == 404:
+                raise ValidationError('Não foi possivel validar o token.')
+
+            token = request.headers.get('Authorization')
+            if token.startswith("Bearer "):
+                token = token[7:]
+
+            jwt_data = validate_jwt(token)
+
+            user_id = jwt_data.get('id')
+            user = User.objects.get(id=user_id)  # Recebe o id do usuário
             errors = []  # Lista para coletar todos os erros
 
             email = request.data.get('email')
             nickname = request.data.get('nickname')
 
-            if User.objects.filter(nick_name=nickname).exclude(pk=id).exists():
+            if User.objects.filter(nick_name=nickname).exclude(pk=user_id).exists():
                 errors.append(
                     "Usuário com este nome já existe")
             if email == user.email:
                 errors.append(
                     "Este é o mesmo email que já registrado em sua conta")
-            if User.objects.filter(email=email).exclude(pk=id).exists():
+            if User.objects.filter(email=email).exclude(pk=user_id).exists():
                 errors.append(
                     "Email já está registrado")
 
@@ -112,29 +153,34 @@ def user_update(request, id):
                 "success": False,
                 "message": {e}},
                 status=status.HTTP_400_BAD_REQUEST)
-    return JsonResponse({
-        "success": False,
-        "message": "Metódo não autorizado"},
-        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    else:
+        return JsonResponse({"success": False,
+                            "message": "Metódo não autorizado"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @csrf_exempt
 @api_view(['POST'])
 def user_password_update(request):
-    email = request.data.get('email')
-    try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
+    if request.method == "POST":
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({
+                "success": False,
+                "message": "Email não encontrado"},
+                status=status.HTTP_404_NOT_FOUND)
+        # Gerar o token e enviar o email
+        send_reset_email(user)
         return Response({
-            "success": False,
-            "message": "Email não encontrado"},
-            status=status.HTTP_404_NOT_FOUND)
-    # Gerar o token e enviar o email
-    send_reset_email(user)
-    return Response({
-        "success": True,
-        "message": "enviando email"},
-        status=status.HTTP_200_OK)
+            "success": True,
+            "message": "enviando email"},
+            status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Metódo não autorizado"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def send_reset_email(user):
@@ -175,19 +221,24 @@ def send_reset_email(user):
 @csrf_exempt
 @api_view(['POST'])
 def verify_reset_token(request):
-    uidb64 = request.data.get('uid')
-    token = request.data.get('token')
+    if request.method == "POST":
+        uidb64 = request.data.get('uid')
+        token = request.data.get('token')
 
-    # Verifica se o token é válido
-    if is_valid_token(uidb64, token):
+        # Verifica se o token é válido
+        if is_valid_token(uidb64, token):
+            return Response({
+                "success": True,
+                "message": "Token válido"},
+                status=status.HTTP_200_OK)
         return Response({
-            "success": True,
-            "message": "Token válido"},
-            status=status.HTTP_200_OK)
-    return Response({
-        "success": False,
-        "message": "Token inválido ou expirado!"},
-        status=status.HTTP_400_BAD_REQUEST)
+            "success": False,
+            "message": "Token inválido ou expirado!"},
+            status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Método não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def is_valid_token(uidb64, token):
