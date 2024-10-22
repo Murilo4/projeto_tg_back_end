@@ -104,7 +104,7 @@ def confirmation_code(request):
 
                 # Usar o serializer para validar e criar o registro temporário
                 serializer = TempUserSerializer(data=user_temp_format)
-                if serializer.is_valid():
+                if serializer.is_valid(raise_exception=True):
                     user_temp = serializer.save()  # Salva o usuário temporário
                     cache.set(f'usuario_{email}', user_temp_format,
                               timeout=300)

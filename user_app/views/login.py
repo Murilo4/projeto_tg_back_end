@@ -7,10 +7,13 @@ from rest_framework import status
 from django.core import exceptions
 from ..code_and_security.code_generator import generate_session_id
 from ..code_and_security.code_generator import generate_jwt_session
+from ..code_and_security.code_generator import blacklist_jwt
 from django.views.decorators.csrf import csrf_exempt
 from firebase_admin import credentials
 import firebase_admin
 from django.core.cache import cache
+import requests
+from django.core.exceptions import ValidationError
 cred = credentials.Certificate('user_app/conections/firebase.json')
 firebase_admin.initialize_app(cred)
 
@@ -35,17 +38,12 @@ def login_view(request):
 
                 response = JsonResponse({'success': True,
                                         'message':
-                                         'Login realizado com sucesso',
-                                         'cookie': session_id,
-                                         'jwt_token': jwt_token,
-                                         'email': email})
+                                        'Login realizado com sucesso',
+                                        'cookie': session_id,
+                                        'jwt_token': jwt_token,
+                                        'email': email})
                 response.set_cookie('session_id', session_id, max_age=604800)
                 return response
-            else:
-                return JsonResponse({"success": False,
-                                     "message":
-                                     "Não foi possivel validar a sessão"},
-                                    status=status.HTTP_401_UNAUTHORIZED)
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
@@ -72,6 +70,16 @@ def logout_user(request):
                                     'message': 'Usuario não está logado'},
                                     status=status.HTTP_400_BAD_REQUEST)
             logout(request)
+            response = requests.post(
+                f'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+            if response.status_code == 404:
+                raise ValidationError(f'Não foi possivel validar o token.')
+
+            token = request.headers.get('Authorization')
+            if token.startswith("Bearer "):
+                token = token[7:]
+
+            blacklist_jwt(token)
             # Remove a sessão do usuário
             response = JsonResponse({
                 'success': True,

@@ -125,7 +125,7 @@ def user_update(request):
                     "Usuário com este nome já existe")
             if email == user.email:
                 errors.append(
-                    "Este é o mesmo email que já registrado em sua conta")
+                    "Este é o mesmo email que já está registrado em sua conta")
             if User.objects.filter(email=email).exclude(pk=user_id).exists():
                 errors.append(
                     "Email já está registrado")
@@ -145,10 +145,10 @@ def user_update(request):
                 return Response({
                     "data": serializer.data,
                     "success": True,
-                    "message": "Usuário atualizado com sucesso"
-                }, status=status.HTTP_202_ACCEPTED)
+                    "message": "Usuário atualizado com sucesso"},
+                     status=status.HTTP_202_ACCEPTED)
 
-        except ValidationError as e:
+        except ValidationError as ee:
             return Response({
                 "success": False,
                 "message": {e}},
