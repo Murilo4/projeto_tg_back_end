@@ -55,7 +55,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Exemplo para React em desenvolvimento
     "http://localhost:8000",
-    "http://localhost:8001"       # Seu domínio em produção
+    "http://localhost:8001",
+    "https://flashvibe.vercel.app"       # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'

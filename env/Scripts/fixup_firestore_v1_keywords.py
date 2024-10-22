@@ -1,4 +1,4 @@
-#!C:\Users\murilo\Documents\projeto_tg_back_end\env\Scripts\python.exe
+#!C:\Users\murilo\Documents\tg\projeto_tg_back_end\env\Scripts\python.exe
 # -*- coding: utf-8 -*-
 # Copyright 2024 Google LLC
 #
