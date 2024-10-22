@@ -6,6 +6,9 @@ import jwt
 import os
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
+from dotenv import load_dotenv
+
+load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
