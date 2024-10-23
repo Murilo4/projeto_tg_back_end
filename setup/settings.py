@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+import os
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -113,7 +113,7 @@ DATABASES = {
         'PORT': "14319",
         'OPTIONS': {
             'ssl': {
-                'ca': './ca.pem',
+                'ca': os.getenv("CA_PEM"),
             },
         },
     }
