@@ -113,7 +113,7 @@ DATABASES = {
         'PORT': "14319",
         'OPTIONS': {
             'ssl': {
-                'ca': os.getenv("PEM"),
+                'ca': '/ca.pem',
             },
         },
     }
