@@ -108,7 +108,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'flashvibe',
         'USER': "avnadmin",
-        'PASSWORD': "AVNS_0Khaos0wypvibRolbho",
+        'PASSWORD': os.getenv("DB_PASSWORD"),
         'HOST': "mysql-flashvibe-flashvibe.k.aivencloud.com",
         'PORT': "14319",
         'OPTIONS': {
