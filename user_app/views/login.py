@@ -22,9 +22,18 @@ firebase_admin.initialize_app(cred)
 @api_view(['POST'])
 def login_view(request):
     if request.method == "POST":
-        id_token = request.POST.get('id_token')
+        id_token = request.data.get('id_token')
         email = request.data.get('email')
         try:
+            if id_token is None:
+                return JsonResponse({"success": False,
+                                    "message": "id token não localizado"},
+                                    status=status.HTTP_404_NOT_FOUND)
+            
+            if email is None:
+                return JsonResponse({"success": False,
+                                    "message": "email não localizado"},
+                                    status=status.HTTP_404_NOT_FOUND)
             # Verifica e decodifica o token do Firebase
             decoded_token = auth.verify_id_token(id_token)
             if decoded_token:
