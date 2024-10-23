@@ -113,7 +113,7 @@ DATABASES = {
         'PORT': "14319",
         'OPTIONS': {
             'ssl': {
-                'ca': '/ca.pem',
+                'ca': './ca.pem',
             },
         },
     }
