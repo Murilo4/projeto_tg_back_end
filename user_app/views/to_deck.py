@@ -4,6 +4,10 @@ from django.http import JsonResponse
 from ..models import User
 from rest_framework import status
 
+@csrf_exempt
+@api_view(['GET'])
+def cron_job(request):
+    return JsonResponse({'message': 'Cron job executed successfully'}, status=status.HTTP_200_OK)
 
 @csrf_exempt
 @api_view(['GET'])
