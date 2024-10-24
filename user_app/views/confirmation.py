@@ -66,7 +66,7 @@ def confirmation_code(request):
             errors = []  # Lista para coletar todos os erros
             if not nickname:
                 errors.append("Usuário inválido")
-            if email is None:
+            if not email:
                 errors.append("Email inválido")
 
             # Validação do nome de usuário
@@ -80,18 +80,17 @@ def confirmation_code(request):
                 errors.append(
                     "Email já registrado")
 
+            if errors:
+                return JsonResponse({
+                    "success": False,
+                    "message": errors  # Retorna todos os erros encontrados
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(pattern, email):
                 return JsonResponse({
                     "success": False,
                     "message": "Email não é válido"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Se houver erros, retorne a lista de erros
-            if errors:
-                return JsonResponse({
-                    "success": False,
-                    "message": errors  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
             try:
 
