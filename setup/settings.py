@@ -13,7 +13,6 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-import os
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -56,7 +55,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Exemplo para React em desenvolvimento
     "http://localhost:8000",
     "http://localhost:8001",
-    "https://flashvibe.vercel.app"       # Seu domínio em produção
+    "https://flashvibe.vercel.app",
+    "https://projeto-tg-back-end.onrender.com"             # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
@@ -65,6 +65,16 @@ REST_FRAMEWORD = {'DEFAULT_PERMISSION_CLASSES': [
     'rest_frameword.permissions.AllowAny'
 ]}
 
+SECURE_SSL_REDIRECT = True
+
+# HSTS (HTTP Strict Transport Security)
+SECURE_HSTS_SECONDS = 3600  # 1 hora
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Protege cookies em conexões seguras
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 # email credential for sending email
 EMAIL_HOST='smtp.gmail.com'
 EMAIL_HOST_USER='flashvibe11@gmail.com'
