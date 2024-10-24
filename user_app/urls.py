@@ -20,12 +20,13 @@ from .views.confirmation import confirmation_code, Verify_confirmation_code
 from .views.confirmation import resend_email_code, validate_token_view
 from .views.user_manager import user_account, user_delete, user_update
 from .views.user_manager import user_password_update, verify_reset_token
+from .views.confirmation import validate_token_in_session
 from .views.create import create_user
-from .views.login import login_view, logout_user, validate_session
+from .views.login import login_view_email, logout_user, validate_session
 from .views.to_deck import get_user_to_deck, cron_job
 
 urlpatterns = [
-     path('login/', login_view,
+     path('login/', login_view_email,
           name='login'),
      path('user/', user_account,
           name='get_user'),
@@ -35,6 +36,8 @@ urlpatterns = [
           name='send_user_data'),
      path('validate-token/', validate_token_view,
           name='validate_token_view'),
+     path('validate-token-in-session/', validate_token_in_session,
+          name="validate_token_in_session"),
      path('verify-confirmation-code/', Verify_confirmation_code,
           name='verify_confirmation_code'),
      path('create/', create_user,

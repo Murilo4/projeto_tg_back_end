@@ -56,6 +56,43 @@ def validate_token_view(request):
 
 @csrf_exempt
 @api_view(['POST'])
+def validate_token_in_session(request):
+    if request.method == "POST":
+        try:
+            token = request.COOKIES.get('Authorization')
+            # Obtém o token do cabeçalho
+            if not token:
+                return JsonResponse({"success": False,
+                                    "message": "Token JWT não encontrado."},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+            # Remove o prefixo 'Bearer ' se necessário
+            if token.startswith('Bearer '):
+                token = token[7:]
+            # Valida o token JWT
+            jwt_data = validate_jwt(token)
+
+            if "error" in jwt_data:
+                return JsonResponse({"success": False,
+                                    "message": jwt_data["error"]},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+
+            # Se o token for válido
+            return JsonResponse({"success": True,
+                                "message": "Token válido."},
+                                status=status.HTTP_200_OK)
+        except exceptions.ValidationError:
+            return JsonResponse({"success": False,
+                                 "message":  "Token JWT inválido."},
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Método não permitido."},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@csrf_exempt
+@api_view(['POST'])
 def confirmation_code(request):
     if request.method == "POST":
         try:

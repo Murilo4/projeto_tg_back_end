@@ -28,7 +28,7 @@ def user_account(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.headers.get('Authorization')
+            token = request.COOKIES.get('Authorization')
             if token.startswith("Bearer "):
                 token = token[7:]
 
@@ -68,7 +68,7 @@ def user_delete(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.headers.get('Authorization')
+            token = request.COOKIES.get('Authorization')
             if token.startswith("Bearer "):
                 token = token[7:]
 
@@ -107,7 +107,7 @@ def user_update(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.headers.get('Authorization')
+            token = request.COOKIES.get('Authorization')
             if token.startswith("Bearer "):
                 token = token[7:]
 
@@ -148,7 +148,7 @@ def user_update(request):
                     "message": "Usuário atualizado com sucesso"},
                      status=status.HTTP_202_ACCEPTED)
 
-        except ValidationError as ee:
+        except ValidationError as e:
             return Response({
                 "success": False,
                 "message": {e}},

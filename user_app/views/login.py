@@ -33,7 +33,7 @@ firebase_admin.initialize_app(cred)
 
 @csrf_exempt
 @api_view(['POST'])
-def login_view(request):
+def login_view_email(request):
     if request.method == "POST":
         id_token = request.data.get('id_token')
         email = request.data.get('email')
@@ -64,6 +64,56 @@ def login_view(request):
                                         'cookie': session_id,
                                         'jwt_token': jwt_token,
                                         'email': email})
+                response.set_cookie('session_id', session_id, max_age=604800)
+                return response
+
+        except auth.InvalidIdTokenError:
+            return JsonResponse({'success': False,
+                                'message': 'Token inválido'},
+                                status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False,
+                                'message': 'Usuario não localizado'},
+                                status=status.HTTP_404_NOT_FOUND)
+    else:
+        return JsonResponse({"success": False,
+                            "message":  "Método não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+
+@csrf_exempt
+@api_view(['POST'])
+def login_view_phone(request):
+    if request.method == "POST":
+        id_token = request.data.get('id_token')
+        phone = request.data.get('phone')
+        try:
+            if id_token is None:
+                return JsonResponse({"success": False,
+                                    "message": "id token não localizado"},
+                                    status=status.HTTP_404_NOT_FOUND)
+
+            if phone is None:
+                return JsonResponse({"success": False,
+                                    "message": "telefone não localizado"},
+                                    status=status.HTTP_404_NOT_FOUND)
+                # Verifica e decodifica o token do Firebase
+            decoded_token = auth.verify_id_token(id_token)
+            if decoded_token:
+                # Extrai o e-mail diretamente do token
+                user = User.objects.get(phone=phone)
+
+                jwt_token = generate_jwt_session(user)
+                # Gera um cookie de sessão
+                session_id = generate_session_id()
+                cache.set(f'user_auth_{session_id}', phone, timeout=604800)
+
+                response = JsonResponse({'success': True,
+                                        'message':
+                                        'Login realizado com sucesso',
+                                        'cookie': session_id,
+                                        'jwt_token': jwt_token,
+                                        'telefone': phone})
                 response.set_cookie('session_id', session_id, max_age=604800)
                 return response
 
@@ -123,7 +173,7 @@ def logout_user(request):
 @api_view(['POST'])
 def validate_session(request):
     session_id = request.COOKIES.get('session_id')
-    print(session_id)
+
     if not session_id:
         return JsonResponse({'success': False,
                             'message': 'Nenhum token de sessão encontrado'},
