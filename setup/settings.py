@@ -56,7 +56,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:8001",
     "https://flashvibe.vercel.app",
-    "https://projeto-tg-back-end.onrender.com"             # Seu domínio em produção
+    "https://projeto-tg-back-end.onrender.com", 
+    "https://flashvibe.onrender.com/"             # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
