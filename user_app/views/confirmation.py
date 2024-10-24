@@ -74,8 +74,6 @@ def confirmation_code(request):
                 errors.append(
                     "nickname já existe")
 
-            # Validação do email
-
             if User.objects.filter(email=email).exists():
                 errors.append(
                     "Email já registrado")
