@@ -147,7 +147,7 @@ def logout_user(request):
             if response.status_code == 404:
                 raise ValidationError(f'Não foi possivel validar o token.')
 
-            token = request.headers.get('Authorization')
+            token = request.headers.get('jwt_token')
             if token.startswith("Bearer "):
                 token = token[7:]
 

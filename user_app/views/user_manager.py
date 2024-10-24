@@ -28,7 +28,7 @@ def user_account(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.COOKIES.get('Authorization')
+            token = request.COOKIES.get('jwt_token')
             if token.startswith("Bearer "):
                 token = token[7:]
 
@@ -68,7 +68,7 @@ def user_delete(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.COOKIES.get('Authorization')
+            token = request.COOKIES.get('jwt_token')
             if token.startswith("Bearer "):
                 token = token[7:]
 
@@ -107,7 +107,7 @@ def user_update(request):
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.COOKIES.get('Authorization')
+            token = request.COOKIES.get('jwt_token')
             if token.startswith("Bearer "):
                 token = token[7:]
 
