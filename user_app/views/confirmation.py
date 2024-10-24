@@ -66,7 +66,7 @@ def confirmation_code(request):
             errors = []  # Lista para coletar todos os erros
             if not nickname:
                 errors.append("Usuário inválido")
-            if not email:
+            if email is None:
                 errors.append("Email inválido")
 
             # Validação do nome de usuário
