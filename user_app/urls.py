@@ -57,6 +57,6 @@ urlpatterns = [
      path('get-user-to-deck/<int:id>',
           get_user_to_deck,
           name='get-user-to-deck'),
-     path('cron-job', cron_job,  name='cron_job'),
+     path('cron-job/', cron_job,  name='cron_job'),
 
 ]

@@ -24,7 +24,8 @@ cred = credentials.Certificate({
     "client_id": os.getenv("FIREBASE_CLIENT_ID"),
     "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
     "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
-    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_CERT_URL"),
+    "auth_provider_x509_cert_url": os.getenv(
+        "FIREBASE_AUTH_PROVIDER_CERT_URL"),
     "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL"),
     "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN")
 })
@@ -60,10 +61,10 @@ def login_view_email(request):
 
                 response = JsonResponse({'success': True,
                                         'message':
-                                        'Login realizado com sucesso',
-                                        'cookie': session_id,
-                                        'jwt_token': jwt_token,
-                                        'email': email})
+                                         'Login realizado com sucesso',
+                                         'cookie': session_id,
+                                         'jwt_token': jwt_token,
+                                         'email': email})
                 response.set_cookie('session_id', session_id, max_age=604800)
                 return response
 
@@ -79,7 +80,7 @@ def login_view_email(request):
         return JsonResponse({"success": False,
                             "message":  "Método não permitido"},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -110,10 +111,10 @@ def login_view_phone(request):
 
                 response = JsonResponse({'success': True,
                                         'message':
-                                        'Login realizado com sucesso',
-                                        'cookie': session_id,
-                                        'jwt_token': jwt_token,
-                                        'telefone': phone})
+                                         'Login realizado com sucesso',
+                                         'cookie': session_id,
+                                         'jwt_token': jwt_token,
+                                         'telefone': phone})
                 response.set_cookie('session_id', session_id, max_age=604800)
                 return response
 
@@ -143,9 +144,9 @@ def logout_user(request):
                                     status=status.HTTP_400_BAD_REQUEST)
             logout(request)
             response = requests.post(
-                f'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
             if response.status_code == 404:
-                raise ValidationError(f'Não foi possivel validar o token.')
+                raise ValidationError('Não foi possivel validar o token.')
 
             token = request.headers.get('jwt_token')
             if token.startswith("Bearer "):
