@@ -186,7 +186,7 @@ def user_password_update(request):
 def send_reset_email(user):
     token = make_custom_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
-    link = f"http://localhost:3000/redefinir-senha?uid={uid}&token={token}"
+    link = f"https://flashvibe.onrender.com/redefinir-senha?uid={uid}&token={token}"
 
     subject = "Flash vibe "
     html_message = (f"""
