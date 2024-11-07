@@ -91,3 +91,85 @@ def create_user(request):
         return JsonResponse({"success": False,
                              "message": "Metodo não permitido"},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def create_user_from_social(request):
+    if request.method == "POST":
+        try:
+            token = request.headers.get('Authorization')
+            if not token:
+                return JsonResponse({"success": False,
+                                    "message": "Token não encontrado."},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+
+            if token.startswith("Bearer "):
+                token = token[7:]
+            email = request.data.get("email")
+            username = request.data.get("username")
+            nickname = request.data.get("nickname")
+            jwt_data = validate_jwt(token)
+
+            if 'error' in jwt_data:
+                return JsonResponse({"success": False,
+                                    "message": jwt_data['error']},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+
+            email = jwt_data.get('email')
+
+            errors = []  # Lista para coletar todos os erros
+            if not username:
+                return JsonResponse({"success": False,
+                                    'message': 'usuario invalido'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            if not email:
+                return JsonResponse({"success": False,
+                                    'message': 'Email invalido'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            if not nickname:
+                return JsonResponse({"success": False,
+                                     'message': 'Nickname invalido'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validação do nome de usuário
+            if User.objects.filter(nick_name=nickname).exists():
+                errors.append(
+                    "nickname já existe")
+
+            # Validação do email
+
+            if User.objects.filter(email=email).exists():
+                errors.append(
+                    "Email já registrado")
+
+            # Se houver erros, retorne a lista de erros
+            if errors:
+                return JsonResponse({
+                    "success": False,
+                    "message": errors  # Retorna todos os erros encontrados
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            new_user_dict = {'user_name': username, 'email': email,
+                             'nick_name': nickname}
+
+            serializer = UserSerializer(data=new_user_dict)
+            serializer.is_valid()
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+
+            return JsonResponse({
+                "success": True,
+                "message": "Usuário criado com sucesso",
+                "email": email},
+                status=status.HTTP_201_CREATED)
+
+        except exceptions.BadRequest:
+            return JsonResponse({"success": False,
+                                "message":
+                                    "Não foi possível realizar a criação"},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return JsonResponse({"success": False,
+                             "message": "Metodo não permitido"},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)

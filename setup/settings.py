@@ -56,8 +56,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:8001",
     "https://flashvibe.vercel.app",
-    "https://projeto-tg-back-end.onrender.com", 
-    "https://flashvibe.onrender.com/"             # Seu domínio em produção
+    "https://projeto-tg-back-end.onrender.com",
+    "https://flashvibe.onrender.com"             # Seu domínio em produção
 ]
 
 ROOT_URLCONF = 'setup.urls'
@@ -66,9 +66,9 @@ REST_FRAMEWORD = {'DEFAULT_PERMISSION_CLASSES': [
     'rest_frameword.permissions.AllowAny'
 ]}
 
-SECURE_SSL_REDIRECT = True
+# SECURE_SSL_REDIRECT = True
 
-# HSTS (HTTP Strict Transport Security)
+# # HSTS (HTTP Strict Transport Security)
 SECURE_HSTS_SECONDS = 3600  # 1 hora
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -76,14 +76,16 @@ SECURE_HSTS_PRELOAD = True
 # Protege cookies em conexões seguras
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
 # email credential for sending email
-EMAIL_HOST='smtp.gmail.com'
-EMAIL_HOST_USER='flashvibe11@gmail.com'
-EMAIL_HOST_PASSWORD='qyscwwxrhudmuenf'
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_USE_SSL=False
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'flashvibe11@gmail.com'
+EMAIL_HOST_PASSWORD = 'qyscwwxrhudmuenf'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [

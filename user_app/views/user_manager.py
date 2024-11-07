@@ -24,7 +24,7 @@ def user_account(request):
     if request.method == 'GET':
         try:
             response = requests.post(
-                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+                'https://projeto-tg-back-end.onrender.com/validate-token/')
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
@@ -64,7 +64,7 @@ def user_delete(request):
     if request.method == 'DELETE':
         try:
             response = requests.post(
-                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+                'https://projeto-tg-back-end.onrender.com/validate-token/')
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
@@ -103,7 +103,7 @@ def user_update(request):
     if request.method == 'PUT':
         try:
             response = requests.post(
-                'http://ec2-54-94-30-193.sa-east-1.compute.amazonaws.com:8000/validate-token/')
+                'https://projeto-tg-back-end.onrender.com/validate-token/')
             if response.status_code == 404:
                 raise ValidationError('Não foi possivel validar o token.')
 
@@ -120,7 +120,8 @@ def user_update(request):
             email = request.data.get('email')
             nickname = request.data.get('nickname')
 
-            if User.objects.filter(nick_name=nickname).exclude(pk=user_id).exists():
+            if User.objects.filter(
+                    nick_name=nickname).exclude(pk=user_id).exists():
                 errors.append(
                     "Usuário com este nome já existe")
             if email == user.email:
@@ -186,7 +187,8 @@ def user_password_update(request):
 def send_reset_email(user):
     token = make_custom_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
-    link = f"https://flashvibe.onrender.com/redefinir-senha?uid={uid}&token={token}"
+    link = f"https://flashvibe.onrender.com/redefinir-senha?uid={
+        uid}&token={token}"
 
     subject = "Flash vibe "
     html_message = (f"""

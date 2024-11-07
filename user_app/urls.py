@@ -21,7 +21,7 @@ from .views.confirmation import resend_email_code, validate_token_view
 from .views.user_manager import user_account, user_delete, user_update
 from .views.user_manager import user_password_update, verify_reset_token
 from .views.confirmation import validate_token_in_session
-from .views.create import create_user
+from .views.create import create_user, create_user_from_social
 from .views.login import login_view_email, logout_user, validate_session
 from .views.to_deck import get_user_to_deck, cron_job
 
@@ -58,5 +58,6 @@ urlpatterns = [
           get_user_to_deck,
           name='get-user-to-deck'),
      path('cron-job/', cron_job,  name='cron_job'),
-
+     path("create-user-social/", 
+          create_user_from_social, name="create_user_from_social")
 ]

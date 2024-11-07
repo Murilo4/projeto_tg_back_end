@@ -59,16 +59,13 @@ def validate_token_view(request):
 def validate_token_in_session(request):
     if request.method == "POST":
         try:
-            token = request.COOKIES.get('Authorization')
+            token = request.COOKIES.get('jwt_token')
             # Obtém o token do cabeçalho
             if not token:
                 return JsonResponse({"success": False,
                                     "message": "Token JWT não encontrado."},
                                     status=status.HTTP_401_UNAUTHORIZED)
-            # Remove o prefixo 'Bearer ' se necessário
-            if token.startswith('Bearer '):
-                token = token[7:]
-            # Valida o token JWT
+
             jwt_data = validate_jwt(token)
 
             if "error" in jwt_data:
@@ -120,7 +117,7 @@ def confirmation_code(request):
                     "success": False,
                     "message": errors  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
+
             pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(pattern, email):
                 return JsonResponse({
