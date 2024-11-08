@@ -226,7 +226,7 @@ def send_email_code(user_to_code, token=None):
 # View para validar código inserido pelo usuario na validação de email ------
 
 
-@api_view(['post'])
+@api_view(['POST'])
 def resend_email_code(request):
     if request.method == 'POST':
         try:
@@ -313,7 +313,7 @@ def Verify_confirmation_code(request):
                         jwt_token = generate_jwt_2(user_data)
                         return JsonResponse({
                             "success": True,
-                            "message": "Email verified successfully.",
+                            "message": "Email verificado com sucesso.",
                             "jwt_token": jwt_token},
                             status=status.HTTP_200_OK)
 

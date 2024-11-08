@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from ..models import User, TempRegistration
 from django.core import exceptions
 from ..code_and_security.code_generator import validate_jwt
+import re
 
 # ------------------ View para criação de usuario ---------------------
 
@@ -62,6 +63,13 @@ def create_user(request):
                 errors.append(
                     "Email já registrado")
 
+            pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            if not re.match(pattern, email):
+                return JsonResponse({
+                    "success": False,
+                    "message": "Email não é válido"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             # Se houver erros, retorne a lista de erros
             if errors:
                 return JsonResponse({
@@ -98,25 +106,9 @@ def create_user(request):
 def create_user_from_social(request):
     if request.method == "POST":
         try:
-            token = request.headers.get('Authorization')
-            if not token:
-                return JsonResponse({"success": False,
-                                    "message": "Token não encontrado."},
-                                    status=status.HTTP_401_UNAUTHORIZED)
-
-            if token.startswith("Bearer "):
-                token = token[7:]
             email = request.data.get("email")
             username = request.data.get("username")
             nickname = request.data.get("nickname")
-            jwt_data = validate_jwt(token)
-
-            if 'error' in jwt_data:
-                return JsonResponse({"success": False,
-                                    "message": jwt_data['error']},
-                                    status=status.HTTP_401_UNAUTHORIZED)
-
-            email = jwt_data.get('email')
 
             errors = []  # Lista para coletar todos os erros
             if not username:
@@ -160,8 +152,7 @@ def create_user_from_social(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Usuário criado com sucesso",
-                "email": email},
+                "message": "Usuário criado com sucesso"},
                 status=status.HTTP_201_CREATED)
 
         except exceptions.BadRequest:
