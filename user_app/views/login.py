@@ -176,8 +176,9 @@ def logout_user(request):
 @api_view(['POST'])
 def validate_session(request):
     session_id = request.COOKIES.get('session')
+    print(session_id)
 
-    if not session_id:
+    if session_id is None:
         return JsonResponse({'success': False,
                             'message': ['Nenhum token de sessão encontrado']},
                             status=status.HTTP_401_UNAUTHORIZED)
