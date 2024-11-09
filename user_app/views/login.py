@@ -41,12 +41,12 @@ def login_view_email(request):
         try:
             if id_token is None:
                 return JsonResponse({"success": False,
-                                    "message": "id token não localizado"},
+                                    "message": ["id token não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
 
             if email is None:
                 return JsonResponse({"success": False,
-                                    "message": "email não localizado"},
+                                    "message": ["email não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
                 # Verifica e decodifica o token do Firebase
             decoded_token = auth.verify_id_token(id_token)
@@ -71,15 +71,15 @@ def login_view_email(request):
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
-                                'message': 'Token inválido'},
+                                'message': ['Token inválido']},
                                 status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
             return JsonResponse({'success': False,
-                                'message': 'Usuario não localizado'},
+                                'message': ['Usuario não localizado']},
                                 status=status.HTTP_404_NOT_FOUND)
     else:
         return JsonResponse({"success": False,
-                            "message":  "Método não permitido"},
+                            "message":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -92,12 +92,12 @@ def login_view_phone(request):
         try:
             if id_token is None:
                 return JsonResponse({"success": False,
-                                    "message": "id token não localizado"},
+                                    "message": ["id token não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
 
             if phone is None:
                 return JsonResponse({"success": False,
-                                    "message": "telefone não localizado"},
+                                    "message": ["telefone não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
                 # Verifica e decodifica o token do Firebase
             decoded_token = auth.verify_id_token(id_token)
@@ -122,15 +122,15 @@ def login_view_phone(request):
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
-                                'message': 'Token inválido'},
+                                'message': ['Token inválido']},
                                 status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
             return JsonResponse({'success': False,
-                                'message': 'Usuario não localizado'},
+                                'message': ['Usuario não localizado']},
                                 status=status.HTTP_404_NOT_FOUND)
     else:
         return JsonResponse({"success": False,
-                            "message":  "Método não permitido"},
+                            "message":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -158,18 +158,18 @@ def logout_user(request):
             # Remove a sessão do usuário
             response = JsonResponse({
                 'success': True,
-                'message': 'Usuario deslogado'},
+                'message': ['Usuario deslogado']},
                 status=status.HTTP_200_OK)
             response.delete_cookie('session_id')
             return response
         except exceptions.PermissionDenied:
             JsonResponse({
                 "success": False,
-                "message": "não foi possivel encontrar nenhuma sessão"},
+                "message": ["não foi possivel encontrar nenhuma sessão"]},
                 status=status.HTTP_204_NO_CONTENT)
     else:
         return JsonResponse({"success": False,
-                             "message": "Metodo não autorizado?"},
+                             "message": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -179,7 +179,7 @@ def validate_session(request):
 
     if not session_id:
         return JsonResponse({'success': False,
-                            'message': 'Nenhum token de sessão encontrado'},
+                            'message': ['Nenhum token de sessão encontrado']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     # Verifica se a sessão está no cache
@@ -188,19 +188,19 @@ def validate_session(request):
     if user_id:
         # Sessão válida
         return JsonResponse({'success': True,
-                            'message': 'Sessão válida',
+                            'message': ['Sessão válida'],
                              'user_id': user_id})
     else:
         # Sessão inválida ou expirada
         return JsonResponse({'success': False,
-                            'error': 'Sessão inválida ou expirada'},
+                            'error': ['Sessão inválida ou expirada']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
 
 def SessaologoutMiddleware(session_id):
     if not session_id:  # Verifica se session_id é None ou uma string vazia
         return JsonResponse({'success': False,
-                             'message': 'Usuário não está logado!'},
+                             'message': ['Usuário não está logado!']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     return True

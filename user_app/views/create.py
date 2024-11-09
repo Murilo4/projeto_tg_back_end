@@ -19,7 +19,7 @@ def create_user(request):
             token = request.headers.get('Authorization')
             if not token:
                 return JsonResponse({"success": False,
-                                    "message": "Token não encontrado."},
+                                    "message": ["Token não encontrado."]},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             if token.startswith("Bearer "):
@@ -38,7 +38,7 @@ def create_user(request):
             if not temp_user:
                 return JsonResponse({"success": False,
                                     "message":
-                                     "Usuário temporário não encontrado."},
+                                     ["Usuário temporário não encontrado."]},
                                     status=status.HTTP_404_NOT_FOUND)
 
             nickname = temp_user.nick_name
@@ -46,11 +46,11 @@ def create_user(request):
             errors = []  # Lista para coletar todos os erros
             if not username:
                 return JsonResponse({"success": False,
-                                    'message': 'usuario invalido'},
+                                    'message': ['usuario invalido']},
                                     status=status.HTTP_400_BAD_REQUEST)
             if not email:
                 return JsonResponse({"success": False,
-                                    'message': 'Email invalido'},
+                                    'message': ['Email invalido']},
                                     status=status.HTTP_400_BAD_REQUEST)
             # Validação do nome de usuário
             if User.objects.filter(nick_name=nickname).exists():
@@ -67,7 +67,7 @@ def create_user(request):
             if not re.match(pattern, email):
                 return JsonResponse({
                     "success": False,
-                    "message": "Email não é válido"
+                    "message": ["Email não é válido"]
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Se houver erros, retorne a lista de erros
@@ -86,18 +86,18 @@ def create_user(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Usuário criado com sucesso",
+                "message": ["Usuário criado com sucesso"],
                 "email": email},
                 status=status.HTTP_201_CREATED)
 
         except exceptions.BadRequest:
             return JsonResponse({"success": False,
                                 "message":
-                                    "Não foi possível realizar a criação"},
+                                    ["Não foi possível realizar a criação"]},
                                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": "Metodo não permitido"},
+                             "message": ["Metodo não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -113,15 +113,15 @@ def create_user_from_social(request):
             errors = []  # Lista para coletar todos os erros
             if not username:
                 return JsonResponse({"success": False,
-                                    'message': 'usuario invalido'},
+                                    'message': ['usuario invalido']},
                                     status=status.HTTP_400_BAD_REQUEST)
             if not email:
                 return JsonResponse({"success": False,
-                                    'message': 'Email invalido'},
+                                    'message': ['Email invalido']},
                                     status=status.HTTP_400_BAD_REQUEST)
             if not nickname:
                 return JsonResponse({"success": False,
-                                     'message': 'Nickname invalido'},
+                                     'message': ['Nickname invalido']},
                                     status=status.HTTP_400_BAD_REQUEST)
             
             # Validação do nome de usuário
@@ -139,7 +139,7 @@ def create_user_from_social(request):
             if errors:
                 return JsonResponse({
                     "success": False,
-                    "message": errors  # Retorna todos os erros encontrados
+                    "message": [errors]  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             new_user_dict = {'user_name': username, 'email': email,
@@ -152,15 +152,15 @@ def create_user_from_social(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Usuário criado com sucesso"},
+                "message": ["Usuário criado com sucesso"]},
                 status=status.HTTP_201_CREATED)
 
         except exceptions.BadRequest:
             return JsonResponse({"success": False,
                                 "message":
-                                    "Não foi possível realizar a criação"},
+                                    ["Não foi possível realizar a criação"]},
                                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": "Metodo não permitido"},
+                             "message": ["Metodo não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)

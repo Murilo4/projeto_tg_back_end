@@ -40,21 +40,21 @@ def user_account(request):
             return JsonResponse({
                 "data": serializer.data,
                 "success": True,
-                "message": "Usuário encontrado"},
+                "message": ["Usuário encontrado"]},
                 status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return JsonResponse({
                 "success": False,
-                "message": "Usuário não foi encontrado"},
+                "message": ["Usuário não foi encontrado"]},
                 status=status.HTTP_404_NOT_FOUND)
         except Exception:
             return JsonResponse({
                 "sucess": False,
-                "message": "Não foi possível validar o usuário"},
+                "message": ["Não foi possível validar o usuário"]},
                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": "Metodo não autorizado"},
+                             "message": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -79,12 +79,12 @@ def user_delete(request):
             user.delete()
             return JsonResponse({
                 "success": True,
-                "message": "Usuário deletado com sucesso."},
+                "message": ["Usuário deletado com sucesso."]},
                 status=status.HTTP_204_NO_CONTENT)
         except User.DoesNotExist:
             return HttpResponseNotFound({
                 "success": False,
-                "message": "Usuário não encontrado."},
+                "message": ["Usuário não encontrado."]},
                 status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({
@@ -93,7 +93,7 @@ def user_delete(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return JsonResponse({
         "success": False,
-        "message": "Método não permitido."},
+        "message": ["Método não permitido."]},
         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -146,7 +146,7 @@ def user_update(request):
                 return Response({
                     "data": serializer.data,
                     "success": True,
-                    "message": "Usuário atualizado com sucesso"},
+                    "message": ["Usuário atualizado com sucesso"]},
                      status=status.HTTP_202_ACCEPTED)
 
         except ValidationError as e:
@@ -156,7 +156,7 @@ def user_update(request):
                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                            "message": "Metódo não autorizado"},
+                            "message": ["Metódo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -170,17 +170,17 @@ def user_password_update(request):
         except User.DoesNotExist:
             return Response({
                 "success": False,
-                "message": "Email não encontrado"},
+                "message": ["Email não encontrado"]},
                 status=status.HTTP_404_NOT_FOUND)
         # Gerar o token e enviar o email
         send_reset_email(user)
         return Response({
             "success": True,
-            "message": "enviando email"},
+            "message": ["enviando email"]},
             status=status.HTTP_200_OK)
     else:
         return JsonResponse({"success": False,
-                             "message": "Metódo não autorizado"},
+                             "message": ["Metódo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -215,7 +215,7 @@ def send_reset_email(user):
     email_message.send()
     return Response({
         "success": True,
-        "message": "email enviado com sucesso"},
+        "message": ["email enviado com sucesso"]},
         status=status.HTTP_200_OK)
 
 
@@ -230,15 +230,15 @@ def verify_reset_token(request):
         if is_valid_token(uidb64, token):
             return Response({
                 "success": True,
-                "message": "Token válido"},
+                "message": ["Token válido"]},
                 status=status.HTTP_200_OK)
         return Response({
             "success": False,
-            "message": "Token inválido ou expirado!"},
+            "message": ["Token inválido ou expirado!"]},
             status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": "Método não permitido"},
+                             "message": ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -252,5 +252,5 @@ def is_valid_token(uidb64, token):
     if (default_token_generator.check_token(user, token)):
         return Response({
             "success": True,
-            "message": "Código verificado com sucesso"},
+            "message": ["Código verificado com sucesso"]},
             status=status.HTTP_200_OK)
