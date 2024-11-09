@@ -107,19 +107,19 @@ def login_view_phone(request):
 
                 jwt_token = generate_jwt_session(user)
                 # Gera um cookie de sessão
-                session_id = generate_session_id()
-                cache.set(f'user_auth_{session_id}', phone, timeout=604800)
+                session = generate_session_id()
+                cache.set(f'user_auth_{session}', phone, timeout=604800)
 
                 response = JsonResponse({'success': True,
                                         'message':
                                          'Login realizado com sucesso',
-                                         'cookie': session_id,
+                                         'cookie': session,
                                          'jwt_token': jwt_token,
                                          'telefone': phone})
                 response.set_cookie('jwt_token', jwt_token,
                                     max_age=604800, secure=True,
                                     samesite='None')
-                response.set_cookie('session_id', session_id,
+                response.set_cookie('session', session,
                                     max_age=604800, secure=True,
                                     samesite='None')
                 return response
@@ -179,16 +179,16 @@ def logout_user(request):
 
 @api_view(['POST'])
 def validate_session(request):
-    session_id = request.COOKIES.get('session')
-    print(session_id)
+    session = request.COOKIES.get('session')
+    print(session)
 
-    if session_id is None:
+    if session is None:
         return JsonResponse({'success': False,
                             'message': ['Nenhum token de sessão encontrado']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     # Verifica se a sessão está no cache
-    user_id = cache.get(f'user_auth_{session_id}')
+    user_id = cache.get(f'user_auth_{session}')
 
     if user_id:
         # Sessão válida

@@ -61,6 +61,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://flashvibe.onrender.com"             # Seu domínio em produção
 ]
 
+CORS_ORIGIN_WHITELIST = [
+    'https://flashvibe.onrender.com',
+    "http://localhost:3000"  # Adicione o domínio do seu frontend aqui
+]
+
 ROOT_URLCONF = 'setup.urls'
 
 REST_FRAMEWORD = {'DEFAULT_PERMISSION_CLASSES': [
