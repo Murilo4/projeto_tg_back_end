@@ -175,7 +175,7 @@ def logout_user(request):
 
 @api_view(['POST'])
 def validate_session(request):
-    session_id = request.COOKIES.get('session_id')
+    session_id = request.COOKIES.get('session')
 
     if not session_id:
         return JsonResponse({'success': False,
