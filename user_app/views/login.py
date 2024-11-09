@@ -49,25 +49,25 @@ def login_view_email(request):
                                     "message": "email não localizado"},
                                     status=status.HTTP_404_NOT_FOUND)
                 # Verifica e decodifica o token do Firebase
-            # decoded_token = auth.verify_id_token(id_token)
-            # if decoded_token:
+            decoded_token = auth.verify_id_token(id_token)
+            if decoded_token:
                 # Extrai o e-mail diretamente do token
-            user = User.objects.get(email=email)
+                user = User.objects.get(email=email)
 
-            jwt_token = generate_jwt_session(user)
-            # Gera um cookie de sessão
-            session_id = generate_session_id()
-            cache.set(f'user_auth_{session_id}', email, timeout=604800)
+                jwt_token = generate_jwt_session(user)
+                # Gera um cookie de sessão
+                session_id = generate_session_id()
+                cache.set(f'user_auth_{session_id}', email, timeout=604800)
 
-            response = JsonResponse({'success': True,
-                                    'message':
-                                     'Login realizado com sucesso',
-                                     'cookie': session_id,
-                                     'jwt_token': jwt_token,
-                                     'email': email})
-            response.set_cookie('jwt_token', jwt_token, max_age=604800)
-            response.set_cookie('session_id', session_id, max_age=604800)
-            return response
+                response = JsonResponse({'success': True,
+                                        'message':
+                                        'Login realizado com sucesso',
+                                        'cookie': session_id,
+                                        'jwt_token': jwt_token,
+                                        'email': email})
+                response.set_cookie('jwt_token', jwt_token, max_age=604800)
+                response.set_cookie('session_id', session_id, max_age=604800)
+                return response
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
