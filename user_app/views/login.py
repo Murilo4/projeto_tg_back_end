@@ -116,8 +116,12 @@ def login_view_phone(request):
                                          'cookie': session_id,
                                          'jwt_token': jwt_token,
                                          'telefone': phone})
-                response.set_cookie('Authorization', jwt_token, max_age=604800)
-                response.set_cookie('session_id', session_id, max_age=604800)
+                response.set_cookie('jwt_token', jwt_token,
+                                    max_age=604800, secure=True,
+                                    samesite='None')
+                response.set_cookie('session_id', session_id,
+                                    max_age=604800, secure=True,
+                                    samesite='None')
                 return response
 
         except auth.InvalidIdTokenError:
