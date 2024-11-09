@@ -137,7 +137,7 @@ def login_view_phone(request):
 @api_view(['POST'])
 def logout_user(request):
     if request.method == 'POST':
-        session_id = request.COOKIES.get('session_id')
+        session_id = request.COOKIES.get('session')
         try:
             middleware_response = SessaologoutMiddleware(session_id)
             if isinstance(middleware_response, JsonResponse):
