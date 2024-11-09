@@ -180,7 +180,6 @@ def logout_user(request):
 @api_view(['POST'])
 def validate_session(request):
     session = request.data.get('session')
-    print(session)
 
     if session is None:
         return JsonResponse({'success': False,
