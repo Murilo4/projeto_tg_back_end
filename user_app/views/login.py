@@ -114,9 +114,9 @@ def login_view_phone(request):
                                         'message':
                                          'Login realizado com sucesso',
                                          'cookie': session,
-                                         'jwt_token': jwt_token,
-                                         'telefone': phone})
-                response.set_cookie('jwt_token', jwt_token,
+                                         'Authorization': jwt_token,
+                                         'phone': phone})
+                response.set_cookie('Authorization', jwt_token,
                                     max_age=604800, secure=True,
                                     samesite='None')
                 response.set_cookie('session', session,
@@ -141,7 +141,7 @@ def login_view_phone(request):
 @api_view(['POST'])
 def logout_user(request):
     if request.method == 'POST':
-        session_id = request.COOKIES.get('session')
+        session_id = request.headers.get('session')
         try:
             middleware_response = SessaologoutMiddleware(session_id)
             if isinstance(middleware_response, JsonResponse):
@@ -149,17 +149,8 @@ def logout_user(request):
                                     'message': 'Usuario não está logado'},
                                     status=status.HTTP_400_BAD_REQUEST)
             logout(request)
-            response = requests.post(
-                'https://projeto-tg-back-end.onrender.com/validate-token/')
-            if response.status_code == 404:
-                raise ValidationError('Não foi possivel validar o token.')
-
-            token = request.headers.get('jwt_token')
-            if token.startswith("Bearer "):
-                token = token[7:]
-
+            token = request.headers.get('Authorization')
             blacklist_jwt(token)
-            # Remove a sessão do usuário
             response = JsonResponse({
                 'success': True,
                 'message': ['Usuario deslogado']},
