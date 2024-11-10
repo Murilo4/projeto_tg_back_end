@@ -24,10 +24,6 @@ from django.views.decorators.csrf import csrf_exempt
 def user_account(request):
     if request.method == 'GET':
         try:
-            response = requests.post(
-                'https://projeto-tg-back-end.onrender.com/validate-token/')
-            if response.status_code == 404:
-                raise ValidationError('Não foi possivel validar o token.')
 
             token = request.headers.get('jwt_token')
 
