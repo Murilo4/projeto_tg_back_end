@@ -17,6 +17,7 @@ from ..serializers import UserGetSerializer
 import requests
 from ..code_and_security.code_generator import make_custom_token, validate_jwt
 from django.views.decorators.csrf import csrf_exempt
+import os
 
 
 @csrf_exempt
@@ -78,32 +79,53 @@ def user_delete(request):
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             user_id = jwt_data.get('id')
-            user = User.objects.get(id=user_id)
-            if user:
-                user.delete()
+
+            decks_url = f"{os.getenv('DECK_URL')}/get-all-decks-to-user/{user_id}/"
+            response = requests.get(decks_url)
+            if response.status_code == 200:
+                decks = response.json()
+                for deck in decks:
+                    deck_id = deck['id']
+
+                    delete_deck_url = f"{os.getenv('DECK_URL')}/delete-deck/{deck_id}/"
+                    delete_deck_response = requests.delete(
+                        delete_deck_url, headers={"Authorization": token})
+                    if delete_deck_response.status_code != 200:
+                        return JsonResponse({
+                            "success": False,
+                            "message": [f"Falha ao deletar o deck {deck_id}."]
+                        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             else:
-                return JsonResponse({"success": False,
-                                     "message": 
-                                     ["Não foi possivel excluir a conta"]},
-                                    status=status.HTTP_404_NOT_FOUND)
+                return JsonResponse({
+                    "success": False,
+                    "message": ["Falha ao recuperar os decks do usuário."]
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            user = User.objects.get(id=user_id)
+            user.delete()
+
             return JsonResponse({
                 "success": True,
-                "message": ["Usuário deletado com sucesso."]},
-                status=status.HTTP_204_NO_CONTENT)
+                "message": ["Usuário deletado com sucesso."]
+            }, status=status.HTTP_204_NO_CONTENT)
+
         except User.DoesNotExist:
-            return HttpResponseNotFound({
+            return JsonResponse({
                 "success": False,
-                "message": ["Usuário não encontrado."]},
-                status=status.HTTP_400_BAD_REQUEST)
+                "message": ["Usuário não encontrado."]
+            }, status=status.HTTP_404_NOT_FOUND)
+
         except Exception as e:
             return JsonResponse({
                 "success": False,
-                "message": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                "message": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return JsonResponse({
         "success": False,
-        "message": ["Método não permitido."]},
-        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        "message": ["Método não permitido."]
+    }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @csrf_exempt
