@@ -63,7 +63,8 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_HEADERS = [
     'jwt_token',  # Permitindo o jwt_token
-    'Authorization',  # Se você usa Authorization também
+    'Authorization',
+    'session',  # Se você usa Authorization também
     'Content-Type'  # Outros cabeçalhos comuns
 ]
 
