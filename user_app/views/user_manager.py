@@ -27,10 +27,11 @@ def user_account(request):
 
             token = request.headers.get('jwt_token')
 
-            jwt_data = validate_jwt(token)
-
+            jwt_data = validate_jwt(token)  
+            print(jwt_data)
             user_id = jwt_data.get('id')
-            user = User.objects.get(pk=user_id)
+            print(user_id)
+            user = User.objects.get(id=user_id)
             serializer = UserGetSerializer(user)
             user_data = {
                 "email": serializer.data.get("email"),
