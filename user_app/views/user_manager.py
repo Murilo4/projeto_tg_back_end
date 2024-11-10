@@ -150,7 +150,7 @@ def user_update(request):
 
                 # Check if nickname already exists for another user
                 if User.objects.filter(nick_name=nickname).exclude(pk=user_id).exists():
-                    errors.append("Usuário com este nome já existe")
+                    errors.append("Usuário com este apelido já existe")
 
                 # Check if email is already registered
                 if User.objects.filter(email=email).exclude(pk=user_id).exists():
