@@ -133,55 +133,67 @@ def user_delete(request):
 def user_update(request):
     if request.method == 'PUT':
         try:
+            # Extract the JWT token from the request header
             token = request.headers.get('Authorization')
 
+            # Validate the token and get user data
             jwt_data = validate_jwt(token)
-
             user_id = jwt_data.get('id')
             user = User.objects.get(id=user_id)
+
             if user:
                 errors = []
 
+                # Get the new email and nickname from request data
                 email = request.data.get('email')
                 nickname = request.data.get('nickname')
 
-                if User.objects.filter(
-                        nick_name=nickname).exclude(pk=user_id).exists():
-                    errors.append(
-                        "Usuário com este nome já existe")
+                # Check if nickname already exists for another user
+                if User.objects.filter(nick_name=nickname).exclude(pk=user_id).exists():
+                    errors.append("Usuário com este nome já existe")
 
+                # Check if email is already registered
                 if User.objects.filter(email=email).exclude(pk=user_id).exists():
-                    errors.append(
-                        "Email já está registrado")
+                    errors.append("Email já está registrado")
 
+                # Return validation errors if any
                 if errors:
                     return JsonResponse({
                         "success": False,
-                        "message": [errors]
+                        "message": errors
                     }, status=status.HTTP_400_BAD_REQUEST)
 
+                # If the email hasn't changed, proceed with updating the user
                 if email == user.email:
-
-                    # Atualiza os dados do usuário
-                    serializer = UserChangeSerializer(user, data=request.data,
-                                                      partial=True)
+                    # Update user data using the serializer
+                    serializer = UserChangeSerializer(user, data=request.data, partial=True)
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()
                         return Response({
                             "data": serializer.data,
                             "success": True,
-                            "message": ["Usuário atualizado com sucesso"]},
-                            status=status.HTTP_202_ACCEPTED)
+                            "message": ["Usuário atualizado com sucesso"]
+                        }, status=status.HTTP_202_ACCEPTED)
 
         except ValidationError as e:
+            # Handle the ValidationError and return it as a serializable response
             return Response({
                 "success": False,
-                "message": {e}},
-                status=status.HTTP_400_BAD_REQUEST)
+                "message": list(e.args)  # Convert ValidationError messages to a list of strings
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            # Handle case where the user doesn't exist in the database
+            return JsonResponse({
+                "success": False,
+                "message": ["Usuário não encontrado"]
+            }, status=status.HTTP_404_NOT_FOUND)
+
     else:
-        return JsonResponse({"success": False,
-                            "message": ["Metódo não autorizado"]},
-                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse({
+            "success": False,
+            "message": ["Método não autorizado"]
+        }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @csrf_exempt
