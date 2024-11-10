@@ -35,8 +35,15 @@ def user_account(request):
             user_id = jwt_data.get('id')
             user = User.objects.get(pk=user_id)
             serializer = UserSerializer(user)
+            user_data = {
+                "email": serializer.data.get("email"),
+                "username": serializer.data.get("username"),
+                "nickname": serializer.data.get("nickname"),
+                "phone": serializer.data.get("phone"),
+                "userImg": serializer.data.get("userImg")
+            }
             return JsonResponse({
-                "data": serializer.data,
+                "data": user_data,
                 "success": True,
                 "message": ["Usuário encontrado"]},
                 status=status.HTTP_200_OK)
