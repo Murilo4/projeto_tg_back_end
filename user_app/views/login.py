@@ -65,7 +65,7 @@ def login_view_email(request):
                                         'cookie': session_id,
                                         'Authorization': jwt_token,
                                         'email': email})
-                response.set_cookie('jwt_token', jwt_token, max_age=604800)
+                response.set_cookie('Authorization', jwt_token, max_age=604800)
                 response.set_cookie('session_id', session_id, max_age=604800)
                 return response
 
