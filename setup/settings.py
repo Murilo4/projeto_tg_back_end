@@ -63,13 +63,14 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_HEADERS = [
     'jwt_token',  # Permitindo o jwt_token
-    'Authorization',  # Se você usa Authorization também
-    'Content-Type',  # Outros cabeçalhos comuns
+   # 'Authorization',  # Se você usa Authorization também
+    'Content-Type'  # Outros cabeçalhos comuns
 ]
 
 CORS_ORIGIN_WHITELIST = [
     'https://flashvibe.onrender.com',
-    "http://localhost:3000"  # Adicione o domínio do seu frontend aqui
+    "http://localhost:3000",
+    "http://localhost:8000"  # Adicione o domínio do seu frontend aqui
 ]
 
 ROOT_URLCONF = 'setup.urls'

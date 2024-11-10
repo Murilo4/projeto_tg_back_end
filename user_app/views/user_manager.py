@@ -25,12 +25,12 @@ def user_account(request):
     if request.method == 'GET':
         try:
 
-            token = request.headers.get('jwt_token')
+            token = request.headers.get('Authorization')
 
-            jwt_data = validate_jwt(token)  
-            print(jwt_data)
+            jwt_data = validate_jwt(token)
+
             user_id = jwt_data.get('id')
-            print(user_id)
+
             user = User.objects.get(id=user_id)
             serializer = UserGetSerializer(user)
             user_data = {
@@ -50,11 +50,14 @@ def user_account(request):
                 "success": False,
                 "message": ["Usuário não foi encontrado"]},
                 status=status.HTTP_404_NOT_FOUND)
-        except Exception:
+        except Exception as e:
+            # Imprimir o erro para debugging
+            print("Erro:", str(e))
             return JsonResponse({
-                "sucess": False,
-                "message": ["Não foi possível validar o usuário"]},
-                status=status.HTTP_400_BAD_REQUEST)
+                "success": False,
+                "message": ["Não foi possível validar o usuário", str(e)]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     else:
         return JsonResponse({"success": False,
                              "message": ["Metodo não autorizado"]},
