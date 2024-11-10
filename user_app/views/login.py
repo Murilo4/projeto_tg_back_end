@@ -148,7 +148,6 @@ def logout_user(request):
                 return JsonResponse({"success": False,
                                      "message": "Não está logado"},
                                     status=status.HTTP_401_UNAUTHORIZED)
-            logout(request)
             token = request.headers.get('Authorization')
             blacklist_jwt(token)
             JsonResponse({
