@@ -61,6 +61,15 @@ CORS_ALLOWED_ORIGINS = [
     "https://flashvibe.onrender.com"             # Seu domínio em produção
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    "http://localhost:8001",
+    "https://flashvibe.vercel.app",
+    "https://projeto-tg-back-end.onrender.com",
+    "https://flashvibe.onrender.com"  # Adicione a versão HTTPS, se aplicável
+]
+
 CORS_ALLOW_HEADERS = [
     'jwt_token',  # Permitindo o jwt_token
     'Authorization',
