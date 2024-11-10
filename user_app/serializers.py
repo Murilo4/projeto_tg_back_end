@@ -20,10 +20,22 @@ class UserChangeSerializer(serializers.ModelSerializer):
         fields = ('email', 'user_name', 'nick_name', 'phone_number',
                   'user_img')
 
-        def update(self, validated_data):
-            user = User(**validated_data)
-            user.save()
-            return user
+        def update(self, instance, validated_data):
+            instance.email = validated_data.get(
+                'email', instance.email)
+            instance.user_name = validated_data.get(
+                'user_name', instance.user_name)
+            instance.nick_name = validated_data.get(
+                'nick_name', instance.nick_name)
+            instance.phone_number = validated_data.get(
+                'phone_number', instance.phone_number)
+            instance.user_img = validated_data.get(
+                'user_img', instance.user_img)
+
+            # Salva a instância do usuário no banco de dados
+            instance.save()
+
+            return instance
 
 
 class TempUserSerializer(serializers.ModelSerializer):

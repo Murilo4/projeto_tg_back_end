@@ -106,12 +106,8 @@ def user_delete(request):
 def user_update(request):
     if request.method == 'PUT':
         try:
-            response = requests.post(
-                'https://projeto-tg-back-end.onrender.com/validate-token/')
-            if response.status_code == 404:
-                raise ValidationError('Não foi possivel validar o token.')
 
-            token = request.headers.get('jwt_token')
+            token = request.headers.get('Authorization')
 
             jwt_data = validate_jwt(token)
 
@@ -133,11 +129,10 @@ def user_update(request):
                 errors.append(
                     "Email já está registrado")
 
-            # Se houver erros, retorne a lista de erros
             if errors:
                 return JsonResponse({
                     "success": False,
-                    "message": errors  # Retorna todos os erros encontrados
+                    "message": [errors]  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Atualiza os dados do usuário
