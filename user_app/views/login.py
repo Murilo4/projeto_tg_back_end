@@ -138,6 +138,8 @@ def login_view_phone(request):
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
+@csrf_exempt
+@api_view(["POST"])
 def logout_user(request):
     if request.method == 'POST':
         try:
