@@ -29,8 +29,6 @@ def user_account(request):
                 raise ValidationError('Não foi possivel validar o token.')
 
             token = request.headers.get('jwt_token')
-            if token.startswith("Bearer "):
-                token = token[7:]
 
             jwt_data = validate_jwt(token)
 
@@ -69,8 +67,6 @@ def user_delete(request):
                 raise ValidationError('Não foi possivel validar o token.')
 
             token = request.headers.get('jwt_token')
-            if token.startswith("Bearer "):
-                token = token[7:]
 
             jwt_data = validate_jwt(token)
 
@@ -108,8 +104,6 @@ def user_update(request):
                 raise ValidationError('Não foi possivel validar o token.')
 
             token = request.headers.get('jwt_token')
-            if token.startswith("Bearer "):
-                token = token[7:]
 
             jwt_data = validate_jwt(token)
 
