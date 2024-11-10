@@ -69,18 +69,23 @@ def user_account(request):
 def user_delete(request):
     if request.method == 'DELETE':
         try:
-            response = requests.post(
-                'https://projeto-tg-back-end.onrender.com/validate-token/')
-            if response.status_code == 404:
-                raise ValidationError('Não foi possivel validar o token.')
-
-            token = request.headers.get('jwt_token')
+            token = request.headers.get('Authorization')
 
             jwt_data = validate_jwt(token)
+            if not jwt_data:
+                return JsonResponse({"success": False,
+                                     "message": ["Token inválido"]},
+                                    status=status.HTTP_401_UNAUTHORIZED)
 
             user_id = jwt_data.get('id')
             user = User.objects.get(id=user_id)
-            user.delete()
+            if user:
+                user.delete()
+            else:
+                return JsonResponse({"success": False,
+                                     "message": 
+                                     ["Não foi possivel excluir a conta"]},
+                                    status=status.HTTP_404_NOT_FOUND)
             return JsonResponse({
                 "success": True,
                 "message": ["Usuário deletado com sucesso."]},
@@ -106,45 +111,45 @@ def user_delete(request):
 def user_update(request):
     if request.method == 'PUT':
         try:
-
             token = request.headers.get('Authorization')
 
             jwt_data = validate_jwt(token)
 
             user_id = jwt_data.get('id')
-            user = User.objects.get(id=user_id)  # Recebe o id do usuário
-            errors = []  # Lista para coletar todos os erros
+            user = User.objects.get(id=user_id)
+            if user:
+                errors = []
 
-            email = request.data.get('email')
-            nickname = request.data.get('nickname')
+                email = request.data.get('email')
+                nickname = request.data.get('nickname')
 
-            if User.objects.filter(
-                    nick_name=nickname).exclude(pk=user_id).exists():
-                errors.append(
-                    "Usuário com este nome já existe")
-            if email == user.email:
-                errors.append(
-                    "Este é o mesmo email que já está registrado em sua conta")
-            if User.objects.filter(email=email).exclude(pk=user_id).exists():
-                errors.append(
-                    "Email já está registrado")
+                if User.objects.filter(
+                        nick_name=nickname).exclude(pk=user_id).exists():
+                    errors.append(
+                        "Usuário com este nome já existe")
+                if email == user.email:
+                    errors.append(
+                        "Este é o mesmo email que já está registrado em sua conta")
+                if User.objects.filter(email=email).exclude(pk=user_id).exists():
+                    errors.append(
+                        "Email já está registrado")
 
-            if errors:
-                return JsonResponse({
-                    "success": False,
-                    "message": [errors]  # Retorna todos os erros encontrados
-                }, status=status.HTTP_400_BAD_REQUEST)
+                if errors:
+                    return JsonResponse({
+                        "success": False,
+                        "message": [errors]
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Atualiza os dados do usuário
-            serializer = UserChangeSerializer(user, data=request.data,
-                                              partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return Response({
-                    "data": serializer.data,
-                    "success": True,
-                    "message": ["Usuário atualizado com sucesso"]},
-                     status=status.HTTP_202_ACCEPTED)
+                # Atualiza os dados do usuário
+                serializer = UserChangeSerializer(user, data=request.data,
+                                                  partial=True)
+                if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    return Response({
+                        "data": serializer.data,
+                        "success": True,
+                        "message": ["Usuário atualizado com sucesso"]},
+                        status=status.HTTP_202_ACCEPTED)
 
         except ValidationError as e:
             return Response({

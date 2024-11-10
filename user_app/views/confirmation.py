@@ -59,7 +59,7 @@ def validate_token_view(request):
 def validate_token_in_session(request):
     if request.method == "POST":
         try:
-            token = request.data.get('jwt_token')
+            token = request.data.get('Authorization')
             # Obtém o token do cabeçalho
             if not token:
                 return JsonResponse({"success": False,
@@ -97,7 +97,7 @@ def confirmation_code(request):
             email: str = request.data.get('email')
             name: str = request.data.get('name')
 
-            errors = []  # Lista para coletar todos os erros
+            errors = []
             if not nickname:
                 errors.append("Usuário inválido")
             if not email:
