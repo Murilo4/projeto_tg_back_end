@@ -13,6 +13,7 @@ from django.utils.encoding import force_str
 from django.core.mail import EmailMultiAlternatives
 from setup.settings import EMAIL_HOST_USER
 from django.http import HttpResponseNotFound
+from ..serializers import UserGetSerializer
 import requests
 from ..code_and_security.code_generator import make_custom_token, validate_jwt
 from django.views.decorators.csrf import csrf_exempt
@@ -34,13 +35,13 @@ def user_account(request):
 
             user_id = jwt_data.get('id')
             user = User.objects.get(pk=user_id)
-            serializer = UserSerializer(user)
+            serializer = UserGetSerializer(user)
             user_data = {
                 "email": serializer.data.get("email"),
-                "username": serializer.data.get("username"),
-                "nickname": serializer.data.get("nickname"),
-                "phone": serializer.data.get("phone"),
-                "userImg": serializer.data.get("userImg")
+                "username": serializer.data.get("user_name"),
+                "nickname": serializer.data.get("nick_name"),
+                "phone": serializer.data.get("phone_number"),
+                "userImg": serializer.data.get("user_img")
             }
             return JsonResponse({
                 "success": True,

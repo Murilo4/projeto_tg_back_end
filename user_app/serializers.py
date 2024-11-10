@@ -35,3 +35,10 @@ class TempUserSerializer(serializers.ModelSerializer):
         temp_user = TempRegistration(**validated_data)
         temp_user.save()
         return temp_user
+    
+
+class UserGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'user_name', 'nick_name', 'phone_number',
+                  'user_img')
