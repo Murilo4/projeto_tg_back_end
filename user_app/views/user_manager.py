@@ -149,9 +149,7 @@ def user_update(request):
                         nick_name=nickname).exclude(pk=user_id).exists():
                     errors.append(
                         "Usuário com este nome já existe")
-                if email == user.email:
-                    errors.append(
-                        "Este é o mesmo email que já está registrado em sua conta")
+
                 if User.objects.filter(email=email).exclude(pk=user_id).exists():
                     errors.append(
                         "Email já está registrado")
@@ -162,16 +160,18 @@ def user_update(request):
                         "message": [errors]
                     }, status=status.HTTP_400_BAD_REQUEST)
 
-                # Atualiza os dados do usuário
-                serializer = UserChangeSerializer(user, data=request.data,
-                                                  partial=True)
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-                    return Response({
-                        "data": serializer.data,
-                        "success": True,
-                        "message": ["Usuário atualizado com sucesso"]},
-                        status=status.HTTP_202_ACCEPTED)
+                if email == user.email:
+
+                    # Atualiza os dados do usuário
+                    serializer = UserChangeSerializer(user, data=request.data,
+                                                      partial=True)
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                        return Response({
+                            "data": serializer.data,
+                            "success": True,
+                            "message": ["Usuário atualizado com sucesso"]},
+                            status=status.HTTP_202_ACCEPTED)
 
         except ValidationError as e:
             return Response({
