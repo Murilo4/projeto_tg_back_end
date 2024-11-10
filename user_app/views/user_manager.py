@@ -36,7 +36,7 @@ def user_account(request):
             serializer = UserGetSerializer(user)
             user_data = {
                 "email": serializer.data.get("email"),
-                "username": serializer.data.get("user_name"),
+                "name": serializer.data.get("user_name"),
                 "nickname": serializer.data.get("nick_name"),
                 "phone": serializer.data.get("phone_number"),
                 "userImg": serializer.data.get("user_img")
