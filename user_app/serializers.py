@@ -15,10 +15,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserChangeSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='user_name', required=False)
+    photo = serializers.ImageField(source='user_img', required=False)
+    phone = serializers.CharField(source='phone_number', required=False)
+
     class Meta:
         model = User
-        fields = ('email', 'user_name', 'nick_name', 'phone_number',
-                  'user_img')
+        fields = ('email', 'name', 'nick_name', 'phone',
+                  'photo')
 
         def update(self, instance, validated_data):
             instance.email = validated_data.get(
