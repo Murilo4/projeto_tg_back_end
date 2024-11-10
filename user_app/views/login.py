@@ -137,26 +137,24 @@ def login_view_phone(request):
                             "message":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+
 @csrf_exempt
 @api_view(['POST'])
 def logout_user(request):
     if request.method == 'POST':
-        session_id = request.headers.get('session')
         try:
-            middleware_response = SessaologoutMiddleware(session_id)
-            if isinstance(middleware_response, JsonResponse):
-                return JsonResponse({'sucess': False,
-                                    'message': 'Usuario não está logado'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+            session_id = request.headers.get('session')
+            if not session_id:
+                return JsonResponse({"success": False,
+                                     "message": "Não está logado"},
+                                    status=status.HTTP_401_UNAUTHORIZED)
             logout(request)
             token = request.headers.get('Authorization')
             blacklist_jwt(token)
-            response = JsonResponse({
+            JsonResponse({
                 'success': True,
                 'message': ['Usuario deslogado']},
                 status=status.HTTP_200_OK)
-            response.delete_cookie('session_id')
-            return response
         except exceptions.PermissionDenied:
             JsonResponse({
                 "success": False,
@@ -166,6 +164,7 @@ def logout_user(request):
         return JsonResponse({"success": False,
                              "message": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @csrf_exempt
 @api_view(['POST'])
