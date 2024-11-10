@@ -18,10 +18,11 @@ class UserChangeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user_name', required=False)
     photo = serializers.CharField(source='user_img', required=False)
     phone = serializers.CharField(source='phone_number', required=False)
+    nickname = serializers.CharField(source='nick_name', required=False)
 
     class Meta:
         model = User
-        fields = ('email', 'name', 'nick_name', 'phone',
+        fields = ('email', 'name', 'nickname', 'phone',
                   'photo')
 
         def update(self, instance, validated_data):
