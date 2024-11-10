@@ -39,7 +39,7 @@ def user_account(request):
                 "name": serializer.data.get("user_name"),
                 "nickname": serializer.data.get("nick_name"),
                 "phone": serializer.data.get("phone_number"),
-                "userImg": serializer.data.get("user_img")
+                "photo": serializer.data.get("user_img")
             }
             return JsonResponse({
                 "success": True,
