@@ -43,9 +43,9 @@ def user_account(request):
                 "userImg": serializer.data.get("userImg")
             }
             return JsonResponse({
-                "data": user_data,
                 "success": True,
-                "message": ["Usuário encontrado"]},
+                "message": ["Usuário encontrado"],
+                "data": user_data},
                 status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return JsonResponse({
