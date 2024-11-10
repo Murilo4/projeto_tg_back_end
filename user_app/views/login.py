@@ -137,7 +137,7 @@ def login_view_phone(request):
                             "message":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def logout_user(request):
     if request.method == 'POST':
@@ -167,7 +167,7 @@ def logout_user(request):
                              "message": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def validate_session(request):
     session = request.data.get('session')
