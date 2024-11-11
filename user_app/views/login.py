@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from firebase_admin import credentials
 import firebase_admin
 from django.core.cache import cache
-import requests
 import os
 from django.core.exceptions import ValidationError
 cred = credentials.Certificate({
@@ -41,12 +40,12 @@ def login_view_email(request):
         try:
             if id_token is None:
                 return JsonResponse({"success": False,
-                                    "message": ["id token não localizado"]},
+                                    "error": ["id token não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
 
             if email is None:
                 return JsonResponse({"success": False,
-                                    "message": ["email não localizado"]},
+                                    "error": ["email não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
                 # Verifica e decodifica o token do Firebase
             decoded_token = auth.verify_id_token(id_token)
@@ -71,15 +70,15 @@ def login_view_email(request):
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
-                                'message': ['Token inválido']},
+                                'error': ['Token inválido']},
                                 status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
             return JsonResponse({'success': False,
-                                'message': ['Usuario não localizado']},
+                                'error': ['Usuario não localizado']},
                                 status=status.HTTP_404_NOT_FOUND)
     else:
         return JsonResponse({"success": False,
-                            "message":  ["Método não permitido"]},
+                            "error":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -92,12 +91,12 @@ def login_view_phone(request):
         try:
             if id_token is None:
                 return JsonResponse({"success": False,
-                                    "message": ["id token não localizado"]},
+                                    "error": ["id token não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
 
             if phone is None:
                 return JsonResponse({"success": False,
-                                    "message": ["telefone não localizado"]},
+                                    "error": ["telefone não localizado"]},
                                     status=status.HTTP_404_NOT_FOUND)
                 # Verifica e decodifica o token do Firebase
             decoded_token = auth.verify_id_token(id_token)
@@ -126,15 +125,15 @@ def login_view_phone(request):
 
         except auth.InvalidIdTokenError:
             return JsonResponse({'success': False,
-                                'message': ['Token inválido']},
+                                'error': ['Token inválido']},
                                 status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
             return JsonResponse({'success': False,
-                                'message': ['Usuario não localizado']},
+                                'error': ['Usuario não localizado']},
                                 status=status.HTTP_404_NOT_FOUND)
     else:
         return JsonResponse({"success": False,
-                            "message":  ["Método não permitido"]},
+                            "error":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -146,7 +145,7 @@ def logout_user(request):
             session_id = request.headers.get('session')
             if not session_id:
                 return JsonResponse({"success": False,
-                                     "message": "Não está logado"},
+                                     "error": "Não está logado"},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             cache.delete(f'user_auth_{session_id}')
@@ -161,11 +160,11 @@ def logout_user(request):
         except exceptions.PermissionDenied:
             return JsonResponse({
                 "success": False,
-                "message": ["Não foi possível encontrar nenhuma sessão"]},
+                "error": ["Não foi possível encontrar nenhuma sessão"]},
                 status=status.HTTP_204_NO_CONTENT)
     else:
         return JsonResponse({"success": False,
-                             "message": ["Método não autorizado"]},
+                             "error": ["Método não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -176,7 +175,7 @@ def validate_session(request):
 
     if session is None:
         return JsonResponse({'success': False,
-                            'message': ['Nenhum token de sessão encontrado']},
+                            'error': ['Nenhum token de sessão encontrado']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     # Verifica se a sessão está no cache
@@ -197,7 +196,7 @@ def validate_session(request):
 def SessaologoutMiddleware(session_id):
     if not session_id:  # Verifica se session_id é None ou uma string vazia
         return JsonResponse({'success': False,
-                             'message': ['Usuário não está logado!']},
+                             'error': ['Usuário não está logado!']},
                             status=status.HTTP_401_UNAUTHORIZED)
 
     return True

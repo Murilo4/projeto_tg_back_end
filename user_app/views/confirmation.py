@@ -63,14 +63,14 @@ def validate_token_in_session(request):
             # Obtém o token do cabeçalho
             if not token:
                 return JsonResponse({"success": False,
-                                    "message": ["Token JWT não encontrado."]},
+                                    "error": ["Token JWT não encontrado."]},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             jwt_data = validate_jwt(token)
 
             if "error" in jwt_data:
                 return JsonResponse({"success": False,
-                                    "message": jwt_data["error"]},
+                                    "error": jwt_data["error"]},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             # Se o token for válido
@@ -79,12 +79,12 @@ def validate_token_in_session(request):
                                 status=status.HTTP_200_OK)
         except exceptions.ValidationError:
             return JsonResponse({"success": False,
-                                 "message":  ["Token JWT inválido."]},
+                                 "error":  ["Token JWT inválido."]},
                                 status=status.HTTP_401_UNAUTHORIZED)
 
     else:
         return JsonResponse({"success": False,
-                             "message": ["Método não permitido."]},
+                             "error": ["Método não permitido."]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -115,14 +115,14 @@ def confirmation_code(request):
             if errors:
                 return JsonResponse({
                     "success": False,
-                    "message": [errors]  # Retorna todos os erros encontrados
+                    "error": [errors]  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(pattern, email):
                 return JsonResponse({
                     "success": False,
-                    "message": ["Email não é válido"]
+                    "error": ["Email não é válido"]
                 }, status=status.HTTP_400_BAD_REQUEST)
             try:
 
@@ -151,22 +151,22 @@ def confirmation_code(request):
                     # Se o serializer não for válido, retorne os erros
                 return JsonResponse({
                     "success": False,
-                    "message": ["usuario temporario já existe"]
+                    "error": ["usuario temporario já existe"]
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             except exceptions.BadRequest:  # Captura exceção com informações
                 return JsonResponse({
                     "success": False,
-                    "message": ['Erro ao salvar os dados']
+                    "error": ['Erro ao salvar os dados']
                     }, status=status.HTTP_400_BAD_REQUEST)
         except exceptions.FieldDoesNotExist:
             return JsonResponse({"success": False,
-                                "message":
+                                "error":
                                  ["Não foi possível realizar a validação"]},
                                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": ["Metodo não autorizado"]},
+                             "error": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -249,23 +249,23 @@ def resend_email_code(request):
         except exceptions.ObjectDoesNotExist:
             return JsonResponse(
                 {"success": False,
-                    "message": ["Não foi possível encontrar o usuário"]},
+                    "error": ["Não foi possível encontrar o usuário"]},
                 status=status.HTTP_404_NOT_FOUND
                 )
         except exceptions.ValidationError:
             return JsonResponse(
                 {"success": False,
-                 "message": ["Erro ao validar o código de confirmação"]},
+                 "error": ["Erro ao validar o código de confirmação"]},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except exceptions.BadRequest:
             return JsonResponse({"success": False,
-                                "message":
+                                "error":
                                     ["Não foi possível realizar o reenvio"]},
                                 status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message":  ["Método não suportado"]},
+                             "error":  ["Método não suportado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -278,24 +278,24 @@ def Verify_confirmation_code(request):
         cached_code = cache.get(f'confirmation_code_{email}')
         if not code:
             return JsonResponse({"success": False,
-                                'message': ['nenhum codigo identificado']},
+                                'error': ['nenhum codigo identificado']},
                                 status=status.HTTP_400_BAD_REQUEST)
         if not email:
             return JsonResponse({"success": False,
-                                'message': ['Email invalido']},
+                                'error': ['Email invalido']},
                                 status=status.HTTP_400_BAD_REQUEST)
         try:
             user = TempRegistration.objects.get(email=email)
         except TempRegistration.DoesNotExist:
             return JsonResponse({"success": False,
-                                "message":
+                                "error":
                                  ["Usuário temporário não encontrado."]},
                                 status=status.HTTP_404_NOT_FOUND)
 
         if cached_code is None:
             return JsonResponse({
                 'success': False,
-                "message":
+                "error":
                 ["Nenhum código de confirmação encontrado para este email"]},
                 status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -320,26 +320,26 @@ def Verify_confirmation_code(request):
                     except exceptions.ObjectDoesNotExist:
                         return JsonResponse({
                             "success": False,
-                            "message": ["Usuário não encontrado."]},
+                            "error": ["Usuário não encontrado."]},
                             status=status.HTTP_404_NOT_FOUND)
                 else:
                     return JsonResponse({
                         "success": False,
-                        "message": ["Código invalido ou expirado."]},
+                        "error": ["Código invalido ou expirado."]},
                         status=status.HTTP_404_NOT_FOUND)
             else:
                 return JsonResponse({
                     "success": False,
-                    "message":
+                    "error":
                     ["Email ou código invalido para essa requisição."]},
                     status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         except exceptions.ViewDoesNotExist:
             return JsonResponse({
                 "success": False,
-                "message": ["erro inesperado ocorreu"]},
+                "error": ["erro inesperado ocorreu"]},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse({"success": False,
-                             "message":  ["Método não permitido"]},
+                             "error":  ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)

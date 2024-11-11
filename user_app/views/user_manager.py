@@ -31,7 +31,7 @@ def user_account(request):
             jwt_data = validate_jwt(token)
             if not jwt_data:
                 return Response({"success": False,
-                                 "message": "token Invalido"},
+                                 "error": "token Invalido"},
                                 status=status.HTTP_401_UNAUTHORIZED)
 
             user_id = jwt_data.get('id')
@@ -53,19 +53,19 @@ def user_account(request):
         except User.DoesNotExist:
             return JsonResponse({
                 "success": False,
-                "message": ["Usuário não foi encontrado"]},
+                "error": ["Usuário não foi encontrado"]},
                 status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             # Imprimir o erro para debugging
             print("Erro:", str(e))
             return JsonResponse({
                 "success": False,
-                "message": ["Não foi possível validar o usuário", str(e)]},
+                "error": ["Não foi possível validar o usuário", str(e)]},
                 status=status.HTTP_400_BAD_REQUEST
             )
     else:
         return JsonResponse({"success": False,
-                             "message": ["Metodo não autorizado"]},
+                             "error": ["Metodo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -79,7 +79,7 @@ def user_delete(request):
             jwt_data = validate_jwt(token)
             if not jwt_data:
                 return JsonResponse({"success": False,
-                                     "message": ["Token inválido"]},
+                                     "error": ["Token inválido"]},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             user_id = jwt_data.get('id')
@@ -97,13 +97,13 @@ def user_delete(request):
                     if delete_deck_response.status_code != 200:
                         return JsonResponse({
                             "success": False,
-                            "message": [f"Falha ao deletar o deck {deck_id}."]
+                            "error": [f"Falha ao deletar o deck {deck_id}."]
                         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             else:
                 return JsonResponse({
                     "success": False,
-                    "message": ["Falha ao recuperar os decks do usuário."]
+                    "error": ["Falha ao recuperar os decks do usuário."]
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             user = User.objects.get(id=user_id)
@@ -117,18 +117,18 @@ def user_delete(request):
         except User.DoesNotExist:
             return JsonResponse({
                 "success": False,
-                "message": ["Usuário não encontrado."]
+                "error": ["Usuário não encontrado."]
             }, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
             return JsonResponse({
                 "success": False,
-                "message": str(e)
+                "error": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse({
         "success": False,
-        "message": ["Método não permitido."]
+        "error": ["Método não permitido."]
     }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -164,7 +164,7 @@ def user_update(request):
                 if errors:
                     return JsonResponse({
                         "success": False,
-                        "message": errors
+                        "error": [errors]
                     }, status=status.HTTP_400_BAD_REQUEST)
 
                 # If the email hasn't changed, proceed with updating the user
@@ -183,20 +183,20 @@ def user_update(request):
             # Handle the ValidationError and return it as a serializable response
             return Response({
                 "success": False,
-                "message": list(e.args)  # Convert ValidationError messages to a list of strings
+                "error": list(e.args)  # Convert ValidationError messages to a list of strings
             }, status=status.HTTP_400_BAD_REQUEST)
 
         except User.DoesNotExist:
             # Handle case where the user doesn't exist in the database
             return JsonResponse({
                 "success": False,
-                "message": ["Usuário não encontrado"]
+                "error": ["Usuário não encontrado"]
             }, status=status.HTTP_404_NOT_FOUND)
 
     else:
         return JsonResponse({
             "success": False,
-            "message": ["Método não autorizado"]
+            "error": ["Método não autorizado"]
         }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -210,7 +210,7 @@ def user_password_update(request):
         except User.DoesNotExist:
             return Response({
                 "success": False,
-                "message": ["Email não encontrado"]},
+                "error": ["Email não encontrado"]},
                 status=status.HTTP_404_NOT_FOUND)
         # Gerar o token e enviar o email
         send_reset_email(user)
@@ -220,7 +220,7 @@ def user_password_update(request):
             status=status.HTTP_200_OK)
     else:
         return JsonResponse({"success": False,
-                             "message": ["Metódo não autorizado"]},
+                             "error": ["Metódo não autorizado"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -274,11 +274,11 @@ def verify_reset_token(request):
                 status=status.HTTP_200_OK)
         return Response({
             "success": False,
-            "message": ["Token inválido ou expirado!"]},
+            "error": ["Token inválido ou expirado!"]},
             status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({"success": False,
-                             "message": ["Método não permitido"]},
+                             "error": ["Método não permitido"]},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
