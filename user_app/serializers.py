@@ -16,8 +16,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserChangeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user_name', required=False)
-    photo = serializers.CharField(source='user_img', required=False)
-    phone = serializers.CharField(source='phone_number', required=False)
+    name = serializers.CharField(source='user_name', required=False)
+    photo = serializers.CharField(
+        source='user_img', required=False, allow_blank=True)
+    phone = serializers.CharField(
+        source='phone_number', required=False, allow_blank=True)
     nickname = serializers.CharField(source='nick_name', required=False)
 
     class Meta:

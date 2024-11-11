@@ -29,6 +29,10 @@ def user_account(request):
             token = request.headers.get('Authorization')
 
             jwt_data = validate_jwt(token)
+            if not jwt_data:
+                return Response({"success": False,
+                                 "message": "token Invalido"},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
             user_id = jwt_data.get('id')
 
