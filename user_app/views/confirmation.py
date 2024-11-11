@@ -115,7 +115,7 @@ def confirmation_code(request):
             if errors:
                 return JsonResponse({
                     "success": False,
-                    "error": [errors]  # Retorna todos os erros encontrados
+                    "error": errors  # Retorna todos os erros encontrados
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
